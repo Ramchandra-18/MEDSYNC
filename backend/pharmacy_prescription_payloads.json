@@ -1,0 +1,287 @@
+{
+  "postman_collection": {
+    "info": {
+      "name": "MedSync Pharmacy Prescription API",
+      "description": "Test pharmacy prescription viewing endpoints"
+    },
+    "item": [
+      {
+        "name": "Get All Prescriptions",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/prescriptions?page=1&limit=10&sort_by=created_at&sort_order=desc",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "prescriptions"],
+            "query": [
+              {
+                "key": "page",
+                "value": "1",
+                "description": "Page number (default: 1)"
+              },
+              {
+                "key": "limit",
+                "value": "10",
+                "description": "Items per page (default: 20, max: 100)"
+              },
+              {
+                "key": "sort_by",
+                "value": "created_at",
+                "description": "Sort field: created_at, prescription_date, patient_name, doctor_name, patient_age, disease, doctor_department"
+              },
+              {
+                "key": "sort_order",
+                "value": "desc",
+                "description": "Sort order: asc or desc"
+              }
+            ]
+          },
+          "description": "Get all prescriptions with pagination and sorting"
+        }
+      },
+      {
+        "name": "Get Prescriptions with Filters",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/prescriptions?patient_email=john.smith@example.com&doctor_name=Dr.%20Sarah&department=Cardiology&date_from=2025-10-01&date_to=2025-10-31",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "prescriptions"],
+            "query": [
+              {
+                "key": "patient_email",
+                "value": "john.smith@example.com",
+                "description": "Filter by patient email (partial match)"
+              },
+              {
+                "key": "patient_name",
+                "value": "",
+                "description": "Filter by patient name (partial match)",
+                "disabled": true
+              },
+              {
+                "key": "doctor_name",
+                "value": "Dr. Sarah",
+                "description": "Filter by doctor name (partial match)"
+              },
+              {
+                "key": "doctor_code",
+                "value": "",
+                "description": "Filter by doctor code (partial match)",
+                "disabled": true
+              },
+              {
+                "key": "department",
+                "value": "Cardiology",
+                "description": "Filter by department (partial match)"
+              },
+              {
+                "key": "disease",
+                "value": "",
+                "description": "Filter by disease (partial match)",
+                "disabled": true
+              },
+              {
+                "key": "date",
+                "value": "",
+                "description": "Filter by exact prescription date (YYYY-MM-DD)",
+                "disabled": true
+              },
+              {
+                "key": "date_from",
+                "value": "2025-10-01",
+                "description": "Filter from date (YYYY-MM-DD)"
+              },
+              {
+                "key": "date_to",
+                "value": "2025-10-31",
+                "description": "Filter to date (YYYY-MM-DD)"
+              }
+            ]
+          },
+          "description": "Get prescriptions with various filters applied"
+        }
+      },
+      {
+        "name": "Get Prescription by ID",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/prescriptions/1",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "prescriptions", "1"]
+          },
+          "description": "Get a specific prescription by its ID"
+        }
+      }
+    ]
+  },
+  "sample_responses": {
+    "get_all_prescriptions_success": {
+      "status": 200,
+      "body": {
+        "message": "Prescriptions retrieved successfully.",
+        "prescriptions": [
+          {
+            "id": 1,
+            "patient_name": "John Smith",
+            "patient_age": 35,
+            "patient_phone": "+1234567890",
+            "patient_gender": "Male",
+            "patient_email": "john.smith@example.com",
+            "disease": "Hypertension and mild anxiety",
+            "prescription_date": "2025-10-31",
+            "prescription_time": "14:30:00",
+            "doctor_name": "Dr. Sarah Wilson",
+            "doctor_code": "D6148",
+            "doctor_department": "Cardiology",
+            "medicines": [
+              {
+                "medication": "Lisinopril",
+                "dosage": "10mg",
+                "frequency": "Once daily in the morning"
+              },
+              {
+                "medication": "Amlodipine",
+                "dosage": "5mg",
+                "frequency": "Once daily with dinner"
+              }
+            ],
+            "created_at": "2025-10-31T14:30:00.000Z",
+            "updated_at": "2025-10-31T14:30:00.000Z"
+          }
+        ],
+        "pagination": {
+          "page": 1,
+          "limit": 20,
+          "total_count": 1,
+          "total_pages": 1,
+          "has_next": false,
+          "has_prev": false
+        },
+        "filters_applied": {
+          "patient_email": null,
+          "patient_name": null,
+          "doctor_name": null,
+          "doctor_code": null,
+          "department": null,
+          "disease": null,
+          "prescription_date": null,
+          "date_from": null,
+          "date_to": null,
+          "sort_by": "created_at",
+          "sort_order": "desc"
+        }
+      }
+    },
+    "get_prescription_by_id_success": {
+      "status": 200,
+      "body": {
+        "message": "Prescription retrieved successfully.",
+        "prescription": {
+          "id": 1,
+          "patient_name": "John Smith",
+          "patient_age": 35,
+          "patient_phone": "+1234567890",
+          "patient_gender": "Male",
+          "patient_email": "john.smith@example.com",
+          "disease": "Hypertension and mild anxiety",
+          "prescription_date": "2025-10-31",
+          "prescription_time": "14:30:00",
+          "doctor_name": "Dr. Sarah Wilson",
+          "doctor_code": "D6148",
+          "doctor_department": "Cardiology",
+          "medicines": [
+            {
+              "medication": "Lisinopril",
+              "dosage": "10mg",
+              "frequency": "Once daily in the morning"
+            },
+            {
+              "medication": "Amlodipine",
+              "dosage": "5mg",
+              "frequency": "Once daily with dinner"
+            }
+          ],
+          "created_at": "2025-10-31T14:30:00.000Z",
+          "updated_at": "2025-10-31T14:30:00.000Z"
+        }
+      }
+    }
+  },
+  "react_component_integration": {
+    "description": "Sample integration for React components",
+    "fetch_all_prescriptions": {
+      "url": "http://localhost:5000/api/pharmacy/prescriptions",
+      "method": "GET",
+      "query_params": {
+        "page": 1,
+        "limit": 20,
+        "sort_by": "created_at",
+        "sort_order": "desc",
+        "patient_email": "",
+        "patient_name": "",
+        "doctor_name": "",
+        "doctor_code": "",
+        "department": "",
+        "disease": "",
+        "date": "",
+        "date_from": "",
+        "date_to": ""
+      }
+    },
+    "fetch_prescription_by_id": {
+      "url": "http://localhost:5000/api/pharmacy/prescriptions/{id}",
+      "method": "GET",
+      "path_params": {
+        "id": "prescription_id"
+      }
+    }
+  },
+  "filter_examples": {
+    "search_by_patient": {
+      "query": "?patient_email=john@example.com",
+      "description": "Find prescriptions for specific patient"
+    },
+    "search_by_doctor": {
+      "query": "?doctor_code=D6148&department=Cardiology",
+      "description": "Find prescriptions by specific doctor and department"
+    },
+    "search_by_date_range": {
+      "query": "?date_from=2025-10-01&date_to=2025-10-31",
+      "description": "Find prescriptions within date range"
+    },
+    "search_by_disease": {
+      "query": "?disease=hypertension&sort_by=prescription_date&sort_order=asc",
+      "description": "Find prescriptions for specific condition, sorted by date"
+    },
+    "recent_prescriptions": {
+      "query": "?sort_by=created_at&sort_order=desc&limit=10",
+      "description": "Get 10 most recent prescriptions"
+    }
+  }
+}

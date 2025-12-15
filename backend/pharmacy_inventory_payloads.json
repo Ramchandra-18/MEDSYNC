@@ -1,0 +1,292 @@
+{
+  "postman_collection": {
+    "info": {
+      "name": "MedSync Pharmacy Inventory API",
+      "description": "Test pharmacy inventory management endpoints"
+    },
+    "item": [
+      {
+        "name": "Get All Inventory",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/inventory?page=1&limit=20&sort_by=medicine_name&sort_order=asc",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "inventory"],
+            "query": [
+              {
+                "key": "page",
+                "value": "1",
+                "description": "Page number (default: 1)"
+              },
+              {
+                "key": "limit",
+                "value": "20",
+                "description": "Items per page (default: 50, max: 200)"
+              },
+              {
+                "key": "sort_by",
+                "value": "medicine_name",
+                "description": "Sort field: medicine_name, quantity, expiry_date, created_at, updated_at"
+              },
+              {
+                "key": "sort_order",
+                "value": "asc",
+                "description": "Sort order: asc or desc"
+              }
+            ]
+          },
+          "description": "Get all inventory items with pagination and sorting"
+        }
+      },
+      {
+        "name": "Get Inventory with Filters",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/inventory?medicine_name=paracetamol&low_stock=10&expiry_from=2025-11-01&expiry_to=2026-12-31",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "inventory"],
+            "query": [
+              {
+                "key": "medicine_name",
+                "value": "paracetamol",
+                "description": "Filter by medicine name (partial match)"
+              },
+              {
+                "key": "low_stock",
+                "value": "10",
+                "description": "Show items with quantity <= this value"
+              },
+              {
+                "key": "expiry_from",
+                "value": "2025-11-01",
+                "description": "Filter expiry date from (YYYY-MM-DD)"
+              },
+              {
+                "key": "expiry_to",
+                "value": "2026-12-31",
+                "description": "Filter expiry date to (YYYY-MM-DD)"
+              },
+              {
+                "key": "expired",
+                "value": "",
+                "description": "Set to 'true' to show only expired medicines",
+                "disabled": true
+              }
+            ]
+          },
+          "description": "Get inventory with filters for low stock and expiry dates"
+        }
+      },
+      {
+        "name": "Add New Medicine",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"medicine_name\": \"Paracetamol 500mg\",\n  \"quantity\": 100,\n  \"expiry_date\": \"2026-12-31\",\n  \"action\": \"add\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/inventory",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "inventory"]
+          },
+          "description": "Add a new medicine to inventory"
+        }
+      },
+      {
+        "name": "Restock Existing Medicine",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"medicine_name\": \"Paracetamol 500mg\",\n  \"quantity\": 50,\n  \"expiry_date\": \"2027-06-30\",\n  \"action\": \"restock\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:5000/api/pharmacy/inventory",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "pharmacy", "inventory"]
+          },
+          "description": "Add more quantity to existing medicine"
+        }
+      }
+    ]
+  },
+  "sample_responses": {
+    "get_inventory_success": {
+      "status": 200,
+      "body": {
+        "message": "Inventory retrieved successfully.",
+        "inventory": [
+          {
+            "id": 1,
+            "medicine_name": "Paracetamol 500mg",
+            "quantity": 150,
+            "expiry_date": "2026-12-31",
+            "created_at": "2025-10-31T10:00:00.000Z",
+            "updated_at": "2025-10-31T14:30:00.000Z"
+          },
+          {
+            "id": 2,
+            "medicine_name": "Amoxicillin 250mg",
+            "quantity": 75,
+            "expiry_date": "2026-06-30",
+            "created_at": "2025-10-31T10:00:00.000Z",
+            "updated_at": "2025-10-31T10:00:00.000Z"
+          }
+        ],
+        "pagination": {
+          "page": 1,
+          "limit": 50,
+          "total_count": 2,
+          "total_pages": 1,
+          "has_next": false,
+          "has_prev": false
+        },
+        "filters_applied": {
+          "medicine_name": null,
+          "expiry_from": null,
+          "expiry_to": null,
+          "low_stock": null,
+          "expired": false,
+          "sort_by": "medicine_name",
+          "sort_order": "asc"
+        }
+      }
+    },
+    "add_medicine_success": {
+      "status": 201,
+      "body": {
+        "message": "Medicine 'Paracetamol 500mg' added to inventory successfully.",
+        "action": "added",
+        "medicine": {
+          "id": 1,
+          "medicine_name": "Paracetamol 500mg",
+          "quantity": 100,
+          "expiry_date": "2026-12-31",
+          "created_at": "2025-10-31T10:00:00.000Z",
+          "updated_at": "2025-10-31T10:00:00.000Z"
+        }
+      }
+    },
+    "restock_medicine_success": {
+      "status": 200,
+      "body": {
+        "message": "Medicine 'Paracetamol 500mg' restocked successfully.",
+        "action": "restocked",
+        "previous_quantity": 100,
+        "added_quantity": 50,
+        "new_quantity": 150,
+        "medicine": {
+          "id": 1,
+          "medicine_name": "Paracetamol 500mg",
+          "quantity": 150,
+          "expiry_date": "2027-06-30",
+          "created_at": "2025-10-31T10:00:00.000Z",
+          "updated_at": "2025-10-31T14:30:00.000Z"
+        }
+      }
+    }
+  },
+  "react_component_integration": {
+    "description": "Sample integration for React components",
+    "fetch_inventory": {
+      "url": "http://localhost:5000/api/pharmacy/inventory",
+      "method": "GET",
+      "query_params": {
+        "page": 1,
+        "limit": 50,
+        "sort_by": "medicine_name",
+        "sort_order": "asc",
+        "medicine_name": "",
+        "expiry_from": "",
+        "expiry_to": "",
+        "low_stock": null,
+        "expired": false
+      }
+    },
+    "add_medicine": {
+      "url": "http://localhost:5000/api/pharmacy/inventory",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "medicine_name": "Medicine Name",
+        "quantity": 100,
+        "expiry_date": "2026-12-31",
+        "action": "add"
+      }
+    },
+    "restock_medicine": {
+      "url": "http://localhost:5000/api/pharmacy/inventory",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "medicine_name": "Medicine Name",
+        "quantity": 50,
+        "expiry_date": "2027-06-30",
+        "action": "restock"
+      }
+    }
+  },
+  "filter_examples": {
+    "low_stock_alert": {
+      "query": "?low_stock=10&sort_by=quantity&sort_order=asc",
+      "description": "Find medicines with low stock (<=10 units)"
+    },
+    "expired_medicines": {
+      "query": "?expired=true&sort_by=expiry_date&sort_order=asc",
+      "description": "Find expired medicines"
+    },
+    "expiring_soon": {
+      "query": "?expiry_from=2025-11-01&expiry_to=2025-12-31&sort_by=expiry_date",
+      "description": "Find medicines expiring in next 2 months"
+    },
+    "search_medicine": {
+      "query": "?medicine_name=paracetamol",
+      "description": "Search for specific medicine by name"
+    }
+  },
+  "validation_rules": {
+    "medicine_name": "Required, non-empty string",
+    "quantity": "Required, non-negative integer",
+    "expiry_date": "Required, YYYY-MM-DD format, cannot be in the past",
+    "action": "Optional, 'add' or 'restock' (default: 'add')"
+  }
+}

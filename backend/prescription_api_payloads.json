@@ -1,0 +1,106 @@
+{
+  "postman_collection": {
+    "info": {
+      "name": "MedSync Prescription API",
+      "description": "Test the prescription creation endpoint"
+    },
+    "item": [
+      {
+        "name": "Create Prescription",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Bearer YOUR_DOCTOR_JWT_TOKEN_HERE",
+              "description": "JWT token from doctor login"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"full_name\": \"John Smith\",\n  \"age\": 35,\n  \"phone\": \"+1234567890\",\n  \"gender\": \"Male\",\n  \"patient_email\": \"john.smith@example.com\",\n  \"disease\": \"Hypertension and mild anxiety\",\n  \"date\": \"2025-10-31\",\n  \"time\": \"14:30\",\n  \"medicines\": [\n    {\n      \"medication\": \"Lisinopril\",\n      \"dosage\": \"10mg\",\n      \"frequency\": \"Once daily in the morning\"\n    },\n    {\n      \"medication\": \"Amlodipine\",\n      \"dosage\": \"5mg\",\n      \"frequency\": \"Once daily with dinner\"\n    },\n    {\n      \"medication\": \"Lorazepam\",\n      \"dosage\": \"0.5mg\",\n      \"frequency\": \"As needed for anxiety, maximum twice daily\"\n    }\n  ]\n}"
+          },
+          "url": {
+            "raw": "http://localhost:5000/api/doctor/prescription",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "5000",
+            "path": ["api", "doctor", "prescription"]
+          },
+          "description": "Create a new prescription for a patient"
+        },
+        "response": [
+          {
+            "name": "Success Response",
+            "status": "Created",
+            "code": 201,
+            "body": "{\n  \"message\": \"Prescription created successfully.\",\n  \"prescription_id\": 1,\n  \"patient_email\": \"john.smith@example.com\",\n  \"email_status\": \"sent\",\n  \"prescription\": {\n    \"id\": 1,\n    \"patient_name\": \"John Smith\",\n    \"patient_age\": 35,\n    \"patient_phone\": \"+1234567890\",\n    \"patient_gender\": \"Male\",\n    \"patient_email\": \"john.smith@example.com\",\n    \"disease\": \"Hypertension and mild anxiety\",\n    \"prescription_date\": \"2025-10-31\",\n    \"prescription_time\": \"14:30:00\",\n    \"doctor_name\": \"Dr. Sarah Wilson\",\n    \"doctor_code\": \"D6148\",\n    \"doctor_department\": \"Cardiology\",\n    \"medicines\": [\n      {\n        \"medication\": \"Lisinopril\",\n        \"dosage\": \"10mg\",\n        \"frequency\": \"Once daily in the morning\"\n      },\n      {\n        \"medication\": \"Amlodipine\",\n        \"dosage\": \"5mg\",\n        \"frequency\": \"Once daily with dinner\"\n      },\n      {\n        \"medication\": \"Lorazepam\",\n        \"dosage\": \"0.5mg\",\n        \"frequency\": \"As needed for anxiety, maximum twice daily\"\n      }\n    ],\n    \"created_at\": \"2025-10-31T14:30:00.000Z\",\n    \"updated_at\": \"2025-10-31T14:30:00.000Z\"\n  }\n}"
+          }
+        ]
+      }
+    ]
+  },
+  "react_component_payload": {
+    "description": "Sample payload for React component integration",
+    "sample_request": {
+      "url": "http://localhost:5000/api/doctor/prescription",
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer YOUR_DOCTOR_JWT_TOKEN",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "full_name": "John Smith",
+        "age": 35,
+        "phone": "+1234567890",
+        "gender": "Male",
+        "patient_email": "john.smith@example.com",
+        "disease": "Hypertension and mild anxiety",
+        "date": "2025-10-31",
+        "time": "14:30",
+        "medicines": [
+          {
+            "medication": "Lisinopril",
+            "dosage": "10mg",
+            "frequency": "Once daily in the morning"
+          },
+          {
+            "medication": "Amlodipine",
+            "dosage": "5mg",
+            "frequency": "Once daily with dinner"
+          },
+          {
+            "medication": "Lorazepam",
+            "dosage": "0.5mg",
+            "frequency": "As needed for anxiety, maximum twice daily"
+          }
+        ]
+      }
+    },
+    "validation_rules": {
+      "required_fields": [
+        "full_name",
+        "age",
+        "phone",
+        "gender",
+        "patient_email",
+        "disease",
+        "date",
+        "time",
+        "medicines"
+      ],
+      "field_formats": {
+        "age": "Integer between 1-120",
+        "gender": "One of: Male, Female, Other",
+        "patient_email": "Valid email format with @ and .",
+        "date": "YYYY-MM-DD format",
+        "time": "HH:MM or HH:MM:SS format (24-hour)",
+        "medicines": "Array of objects, each with medication, dosage, frequency"
+      }
+    }
+  }
+}
