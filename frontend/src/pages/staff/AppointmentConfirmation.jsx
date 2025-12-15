@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import StaffHeader from "../../Components/StaffHeader";
 
-
-
 const mockAppointments = [
   { id: 1, patient: "John Doe", doctor: "Dr. Alice Smith", date: "2025-08-22", time: "10:00", status: "Pending" },
   { id: 2, patient: "Mary Jane", doctor: "Dr. Bob Johnson", date: "2025-08-23", time: "13:00", status: "Pending" },
@@ -11,7 +9,7 @@ const mockAppointments = [
 
 const AppointmentConfirmation = () => {
   const [appointments, setAppointments] = useState([]);
-  const [loadingIds, setLoadingIds] = useState([]); // keep track of appointments being processed
+  const [loadingIds, setLoadingIds] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +18,15 @@ const AppointmentConfirmation = () => {
   const [pageSize, setPageSize] = useState(50);
   const [sort, setSort] = useState("date");
   const [dir, setDir] = useState("asc");
-  const [filters, setFilters] = useState({ date: "", from_date: "", to_date: "", status: "", doctor_name: "", department: "", patient_name: "" });
+  const [filters, setFilters] = useState({
+    date: "",
+    from_date: "",
+    to_date: "",
+    status: "",
+    doctor_name: "",
+    department: "",
+    patient_name: "",
+  });
   const [count, setCount] = useState(0);
 
   const API_BASE = import.meta.env.VITE_API_BASE || "http://192.168.1.15:5000";
@@ -31,12 +37,18 @@ const AppointmentConfirmation = () => {
   };
 
   const setLoading = (id, isLoading) => {
-    setLoadingIds((prev) => (isLoading ? [...prev, id] : prev.filter((x) => x !== id)));
+    setLoadingIds((prev) =>
+      isLoading ? [...prev, id] : prev.filter((x) => x !== id)
+    );
   };
 
   const postJson = async (url, body) => {
     const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
-    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
     const data = await res.json().catch(() => ({}));
     return { status: res.status, ok: res.ok, data };
   };
@@ -44,11 +56,17 @@ const AppointmentConfirmation = () => {
   // map server appointment shape to local display shape
   const mapServerToLocal = (s) => {
     return {
-      id: s.id || s.appointment_id || s.appointmentId || s.uuid || s._id || s.appointment_id,
+      id:
+        s.id ||
+        s.appointment_id ||
+        s.appointmentId ||
+        s.uuid ||
+        s._id ||
+        s.appointment_id,
       patient: s.full_name || s.patient_name || s.patient || s.Full_Name || "",
       doctor: s.doctor_name || s.doctor || s.Doctor_name || "",
       date: s.appointment_date || s.Date || s.date || "",
-      time: (s.appointment_time || s.Time || s.time || "").slice(0,5),
+      time: (s.appointment_time || s.Time || s.time || "").slice(0, 5),
       status: s.status || s.appointment_status || "Pending",
       raw: s,
     };
@@ -75,13 +93,19 @@ const AppointmentConfirmation = () => {
       const res = await fetch(url, { headers: { ...getAuthHeaders() } });
       const data = await res.json();
       if (!res.ok) {
-        setError(data?.error || data?.message || `Failed to load appointments (status ${res.status})`);
+        setError(
+          data?.error ||
+            data?.message ||
+            `Failed to load appointments (status ${res.status})`
+        );
         setAppointments([]);
         setCount(0);
       } else {
-        const items = Array.isArray(data.items) ? data.items.map(mapServerToLocal) : [];
+        const items = Array.isArray(data.items)
+          ? data.items.map(mapServerToLocal)
+          : [];
         setAppointments(items);
-        setCount(data.count || (items.length));
+        setCount(data.count || items.length);
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -101,11 +125,18 @@ const AppointmentConfirmation = () => {
   const handleConfirm = async (id) => {
     setLoading(id, true);
     try {
-      const { status, ok, data } = await postJson(`${API_BASE}/api/staff/appointments/confirm`, { appointment_id: String(id) });
+      const { status, ok, data } = await postJson(
+        `${API_BASE}/api/staff/appointments/confirm`,
+        { appointment_id: String(id) }
+      );
       if (ok) {
-        setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "Confirmed" } : a)));
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: "Confirmed" } : a))
+        );
       } else {
-        alert(data?.message || data?.error || `Failed to confirm (status ${status})`);
+        alert(
+          data?.message || data?.error || `Failed to confirm (status ${status})`
+        );
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -120,11 +151,18 @@ const AppointmentConfirmation = () => {
     const reason = prompt("Enter cancellation reason (optional):");
     setLoading(id, true);
     try {
-      const { status, ok, data } = await postJson(`${API_BASE}/api/staff/appointments/cancel`, { appointment_id: String(id), reason });
+      const { status, ok, data } = await postJson(
+        `${API_BASE}/api/staff/appointments/cancel`,
+        { appointment_id: String(id), reason }
+      );
       if (ok) {
-        setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "Canceled" } : a)));
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: "Canceled" } : a))
+        );
       } else {
-        alert(data?.message || data?.error || `Failed to cancel (status ${status})`);
+        alert(
+          data?.message || data?.error || `Failed to cancel (status ${status})`
+        );
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -142,11 +180,24 @@ const AppointmentConfirmation = () => {
     if (!newTime) return;
     setLoading(id, true);
     try {
-      const { status, ok, data } = await postJson(`${API_BASE}/api/staff/appointments/reschedule`, { appointment_id: String(id), Date: newDate, Time: newTime });
+      const { status, ok, data } = await postJson(
+        `${API_BASE}/api/staff/appointments/reschedule`,
+        { appointment_id: String(id), Date: newDate, Time: newTime }
+      );
       if (ok) {
-        setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, date: newDate, time: newTime, status: "Rescheduled" } : a)));
+        setAppointments((prev) =>
+          prev.map((a) =>
+            a.id === id
+              ? { ...a, date: newDate, time: newTime, status: "Rescheduled" }
+              : a
+          )
+        );
       } else {
-        alert(data?.message || data?.error || `Failed to reschedule (status ${status})`);
+        alert(
+          data?.message ||
+            data?.error ||
+            `Failed to reschedule (status ${status})`
+        );
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -158,198 +209,302 @@ const AppointmentConfirmation = () => {
   };
 
   return (
-    <div
-      className="h-screen w-screen mt-10 mx-auto p-10 font-sans bg-[url('https://images.pexels.com/photos/6129043/pexels-photo-6129043.jpeg')] bg-cover bg-center rounded-3xl shadow-lg space-y-10 overflow-auto"
-      style={{ maxHeight: "100vh" }}
-    >
-     {/* Fixed Header */}
-     <header className="fixed top-0 left-0 right-0 z-50">
+    <div className="min-h-screen w-screen flex flex-col bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 font-sans text-slate-900">
+      {/* background accents */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
+
+      {/* fixed header */}
+      <header className="fixed top-0 left-0 right-0 z-40">
         <StaffHeader />
       </header>
-      {/* Appointment Confirmation Section */}
-      <section>
-        <h1 className="text-3xl font-bold mb-6 bg-white/70 text-blue-700">Appointment Confirmation</h1>
-        {/* Filters and controls */}
-        <div className="mb-6 bg-white/70 p-4 rounded shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Date</label>
-              <input
-                type="date"
-                value={filters.date}
-                onChange={(e) => setFilters((f) => ({ ...f, date: e.target.value }))}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </div>
 
+      <main className="relative z-10 flex-1 pt-24 pb-10 px-4 sm:px-8 lg:px-16 flex justify-center overflow-auto">
+        <div className="w-full max-w-6xl rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.12)] px-5 sm:px-7 py-6 space-y-6">
+          {/* title */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <label className="block text-sm font-medium">Doctor (name)</label>
-              <input
-                type="text"
-                placeholder="Doctor substring"
-                value={filters.doctor_name}
-                onChange={(e) => setFilters((f) => ({ ...f, doctor_name: e.target.value }))}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
+              <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+                Appointment confirmation
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-slate-600">
+                Review requests, confirm, cancel, or reschedule from this queue.
+              </p>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium">Department</label>
-              <input
-                type="text"
-                placeholder="Department"
-                value={filters.department}
-                onChange={(e) => setFilters((f) => ({ ...f, department: e.target.value }))}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </div>
+            <span className="text-[11px] sm:text-xs px-3 py-1 rounded-full bg-sky-50 text-sky-700 font-medium">
+              {loadingList ? "Loading..." : `${count} results`}
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium">Patient name</label>
-              <input
-                type="text"
-                placeholder="Patient substring"
-                value={filters.patient_name}
-                onChange={(e) => setFilters((f) => ({ ...f, patient_name: e.target.value }))}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </div>
+          {/* filters */}
+          <section className="bg-slate-50/80 border border-slate-100 rounded-2xl p-4 sm:p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={filters.date}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, date: e.target.value }))
+                  }
+                  className="mt-1 block w-full border border-slate-200 rounded px-2 py-1 text-sm"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              >
-                <option value="">All</option>
-                <option value="Pending">Pending</option>
-                <option value="Confirmed">Confirmed</option>
-                <option value="Canceled">Canceled</option>
-                <option value="Rescheduled">Rescheduled</option>
-              </select>
-            </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Doctor (name)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Doctor substring"
+                  value={filters.doctor_name}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, doctor_name: e.target.value }))
+                  }
+                  className="mt-1 block w-full border border-slate-200 rounded px-2 py-1 text-sm"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium">Sort</label>
-              <div className="flex gap-2 mt-1">
-                <select value={sort} onChange={(e) => setSort(e.target.value)} className="border rounded px-2 py-1">
-                  <option value="date">Date</option>
-                  <option value="created">Created</option>
-                </select>
-                <select value={dir} onChange={(e) => setDir(e.target.value)} className="border rounded px-2 py-1">
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border rounded px-2 py-1">
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  placeholder="Department"
+                  value={filters.department}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, department: e.target.value }))
+                  }
+                  className="mt-1 block w-full border border-slate-200 rounded px-2 py-1 text-sm"
+                />
               </div>
             </div>
-          </div>
 
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => { setPage(1); fetchAppointments(); }}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Apply
-            </button>
-            <button
-              onClick={() => { setFilters({ date: "", from_date: "", to_date: "", status: "", doctor_name: "", department: "", patient_name: "" }); setPage(1); fetchAppointments(); }}
-              className="bg-gray-200 px-4 py-2 rounded"
-            >
-              Clear
-            </button>
-            <button
-              onClick={() => fetchAppointments()}
-              className="bg-white border px-4 py-2 rounded"
-            >
-              Refresh
-            </button>
-            <div className="ml-auto text-sm text-gray-600 self-center">{loadingList ? 'Loading...' : `${count} results`}</div>
-          </div>
-        </div>
-        {appointments.length === 0 ? (
-          <p className="text-black">No appointment requests at the moment.</p>
-        ) : (
-          <ul className="space-y-4">
-            {appointments.map(({ id, patient, doctor, date, time, status }) => (
-              <li
-                key={id}
-                className="border p-4 rounded shadow bg-gray-50 flex flex-col text-black md:flex-row md:items-center justify-between gap-4"
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Patient name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Patient substring"
+                  value={filters.patient_name}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, patient_name: e.target.value }))
+                  }
+                  className="mt-1 block w-full border border-slate-200 rounded px-2 py-1 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Status
+                </label>
+                <select
+                  value={filters.status}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, status: e.target.value }))
+                  }
+                  className="mt-1 block w-full border border-slate-200 rounded px-2 py-1 text-sm"
+                >
+                  <option value="">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Canceled">Canceled</option>
+                  <option value="Rescheduled">Rescheduled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Sort / page
+                </label>
+                <div className="flex gap-2 mt-1">
+                  <select
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                    className="border border-slate-200 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="date">Date</option>
+                    <option value="created">Created</option>
+                  </select>
+                  <select
+                    value={dir}
+                    onChange={(e) => setDir(e.target.value)}
+                    className="border border-slate-200 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="asc">Asc</option>
+                    <option value="desc">Desc</option>
+                  </select>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="border border-slate-200 rounded px-2 py-1 text-sm"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2 items-center">
+              <button
+                onClick={() => {
+                  setPage(1);
+                  fetchAppointments();
+                }}
+                className="!bg-sky-600 text-white px-4 py-2 rounded text-xs sm:text-sm"
               >
-                <div>
-                  <p><strong>Patient:</strong> {patient}</p>
-                  <p><strong>Doctor:</strong> {doctor}</p>
-                  <p><strong>Date & Time:</strong> {date} at {time}</p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      className={`font-semibold ${
-                        status === "Confirmed"
-                          ? "text-green-600"
-                          : status === "Canceled"
-                          ? "text-red-600"
-                          : "text-yellow-600"
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  </p>
-                </div>
-                
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    onClick={() => handleConfirm(id)}
-                    disabled={status === "Confirmed" || status === "Canceled" || loadingIds.includes(id)}
-                    className="px-3 py-1 !bg-green-600 text-white rounded hover:text-black disabled:bg-gray-300"
+                Apply
+              </button>
+              <button
+                onClick={() => {
+                  setFilters({
+                    date: "",
+                    from_date: "",
+                    to_date: "",
+                    status: "",
+                    doctor_name: "",
+                    department: "",
+                    patient_name: "",
+                  });
+                  setPage(1);
+                  fetchAppointments();
+                }}
+                className="!bg-slate-200 px-4 py-2 rounded text-xs sm:text-sm"
+              >
+                Clear
+              </button>
+              <button
+                onClick={fetchAppointments}
+                className="!bg-slate-200 border border-slate-200 px-4 py-2 rounded text-xs sm:text-sm"
+              >
+                Refresh
+              </button>
+              <div className="ml-auto text-[11px] sm:text-xs text-slate-600">
+                {loadingList ? "Loading..." : `${count} results`}
+              </div>
+            </div>
+          </section>
+
+          {error && (
+            <div className="text-xs sm:text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2">
+              {error}
+            </div>
+          )}
+
+          {/* appointments list as cards */}
+          {appointments.length === 0 && !loadingList ? (
+            <p className="text-sm text-slate-600">
+              No appointment requests at the moment.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {appointments.map(({ id, patient, doctor, date, time, status }) => {
+                const isLoading = loadingIds.includes(id);
+                return (
+                  <div
+                    key={id}
+                    className="border border-slate-100 rounded-2xl shadow-sm bg-slate-50 px-4 py-3 flex flex-col justify-between gap-2 text-xs sm:text-sm"
                   >
-                    {loadingIds.includes(id) ? 'Processing...' : 'Confirm'}
-                  </button>
-                  <button
-                    onClick={() => handleCancel(id)}
-                    disabled={status === "Canceled" || loadingIds.includes(id)}
-                    className="px-3 py-1 !bg-red-600 text-white rounded hover:text-black disabled:bg-gray-300"
-                  >
-                    {loadingIds.includes(id) ? 'Processing...' : 'Cancel'}
-                  </button>
-                  <button
-                    onClick={() => handleReschedule(id)}
-                    disabled={status === "Canceled" || loadingIds.includes(id)}
-                    className="px-3 py-1 !bg-yellow-500 text-white rounded hover:text-black disabled:bg-gray-300"
-                  >
-                    {loadingIds.includes(id) ? 'Processing...' : 'Reschedule'}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {/* Pagination controls */}
-        <div className="mt-6 flex items-center gap-4">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <div className="text-sm text-gray-700">Page {page} {count ? `of ${Math.max(1, Math.ceil(count / pageSize))}` : ''}</div>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 bg-gray-200 rounded"
-          >
-            Next
-          </button>
-          <div className="ml-auto text-sm text-gray-600">Total: {count}</div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-slate-900 truncate">
+                          {patient}
+                        </p>
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            status === "Confirmed"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : status === "Canceled"
+                              ? "bg-rose-50 text-rose-700"
+                              : status === "Rescheduled"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-sky-50 text-sky-700"
+                          }`}
+                        >
+                          {status}
+                        </span>
+                      </div>
+                      <p className="text-slate-700">
+                        <span className="font-medium">Doctor:</span> {doctor}
+                      </p>
+                      <p className="text-slate-700">
+                        <span className="font-medium">When:</span> {date} ·{" "}
+                        {time}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2 flex-wrap mt-2">
+                      <button
+                        onClick={() => handleConfirm(id)}
+                        disabled={
+                          status === "Confirmed" ||
+                          status === "Canceled" ||
+                          isLoading
+                        }
+                        className="px-3 py-1 rounded !bg-emerald-700 text-white text-[11px] font-semibold hover:bg-emerald-700 disabled:bg-slate-300"
+                      >
+                        {isLoading ? "Processing..." : "Confirm"}
+                      </button>
+                      <button
+                        onClick={() => handleCancel(id)}
+                        disabled={status === "Canceled" || isLoading}
+                        className="px-3 py-1 rounded !bg-rose-500 text-white text-[11px] font-semibold hover:bg-rose-700 disabled:bg-slate-300"
+                      >
+                        {isLoading ? "Processing..." : "Cancel"}
+                      </button>
+                      <button
+                        onClick={() => handleReschedule(id)}
+                        disabled={status === "Canceled" || isLoading}
+                        className="px-3 py-1 rounded !bg-amber-300 text-white text-[11px] font-semibold hover:bg-amber-600 disabled:bg-slate-300"
+                      >
+                        {isLoading ? "Processing..." : "Reschedule"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* pagination */}
+          {count > 0 && (
+            <div className="mt-4 flex items-center gap-3 text-xs sm:text-sm">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="px-3 py-1 !bg-slate-200 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <div className="text-slate-700 ">
+                Page {page}
+                {count
+                  ? ` of ${Math.max(1, Math.ceil(count / pageSize))}`
+                  : ""}
+              </div>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1 !bg-slate-200 rounded"
+              >
+                Next
+              </button>
+              <div className="ml-auto text-[11px] sm:text-xs text-slate-600">
+                Total: {count}
+              </div>
+            </div>
+          )}
         </div>
-      </section>
-  
+      </main>
     </div>
   );
 };

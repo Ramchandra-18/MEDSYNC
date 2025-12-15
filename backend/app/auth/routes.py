@@ -214,7 +214,7 @@ def register():
     data = request.get_json(force=True, silent=True) or {}
     required = ["full_name", "email", "password", "role"]
     valid_roles = ["Patient", "Doctor", "Staff", "Pharmacy"]
-    valid_departments = ["Cardiology", "Neurology", "Pediatrics", "Orthopedics", "OPD"]
+    valid_departments = ["Cardiology", "Neurology", "Pediatrics", "Orthopedics", "General OPD"]
     if not all(k in data and data[k] for k in required):
         return {
             "error": f"Missing fields: {', '.join([k for k in required if not data.get(k)])}"

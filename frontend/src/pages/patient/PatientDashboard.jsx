@@ -2,87 +2,309 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PatientHeader from "../../Components/PatientHeader";
 import PatientFooter from "../../Components/PatientFooter";
-import { getFullNameFromToken } from '../../utils/jwt';
-import { FaCalendarAlt, FaFilePrescription, FaClipboardCheck, FaHistory, FaBell, FaHeart, FaMobileAlt } from 'react-icons/fa';
-
-const stats = [
-  { value: 2, label: "Upcoming Appointments", color: "from-sky-200 to-blue-100", icon: <FaCalendarAlt /> },
-  { value: 1, label: "Active Prescription", color: "from-blue-200 to-cyan-100", icon: <FaFilePrescription /> },
-  { value: 0, label: "Pending Payments", color: "from-pink-100 to-blue-100", icon: <FaClipboardCheck /> },
-];
-
-const actions = [
-  { label: "Book Appointment", icon: <FaCalendarAlt />, color: "from-green-100 to-blue-100", desc: "Schedule visits with your doctor" },
-  { label: "View Prescriptions", icon: <FaFilePrescription />, color: "from-sky-100 to-blue-100", desc: "Check your current medications" },
-  { label: "Medical Records", icon: <FaHistory />, color: "from-cyan-100 to-blue-100", desc: "Access lab results & documents" },
-  { label: "Notifications", icon: <FaBell />, color: "from-yellow-100 to-blue-100", desc: "Read health alerts & reminders" },
-  { label: "Health Tips", icon: <FaHeart />, color: "from-pink-100 to-blue-100", desc: "Wellness insights just for you" },
-  { label: "Contact Support", icon: <FaMobileAlt />, color: "from-blue-100 to-sky-100", desc: "Reach out for help and info" },
-];
+import { getFullNameFromToken } from "../../utils/jwt";
+import {
+  FaCalendarAlt,
+  FaFilePrescription,
+  FaClipboardCheck,
+  FaHistory,
+  FaBell,
+  FaHeart,
+  FaMobileAlt,
+} from "react-icons/fa";
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const [animateIn, setAnimateIn] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(localStorage.getItem('currentUser') || 'null');
-  const token = localStorage.getItem('jwtToken');
+  const user =
+    JSON.parse(localStorage.getItem("user")) ||
+    JSON.parse(localStorage.getItem("currentUser") || "null");
+  const token = localStorage.getItem("jwtToken");
   const fullNameFromToken = getFullNameFromToken(token);
-  const displayName = fullNameFromToken || user?.full_name || user?.name || "Patient";
+  const displayName =
+    fullNameFromToken || user?.full_name || user?.name || "Patient";
+
+  // In real app, fetch these
+  const wellnessScore = 82; // /100
+  const nextAppointment = {
+    time: "Thu, 19 Dec · 10:30 AM",
+    dept: "Cardiology",
+    doctor: "Dr. Arjun Rao",
+  };
 
   useEffect(() => {
-    setTimeout(() => setAnimateIn(true), 200);
+    const t = setTimeout(() => setAnimateIn(true), 180);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="min-h-screen w-screen bg-gradient-to-br from-blue-50 via-sky-100 to-blue-200 font-sans flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50">
+    <div className="min-h-screen w-screen bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 text-slate-900 flex flex-col">
+      {/* soft background accents */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
+
+      <div className="fixed top-0 left-0 right-0 z-40">
         <PatientHeader />
       </div>
 
-      <main className={`flex-grow w-full pt-[72px] px-4 sm:px-10 lg:px-24 transition-all duration-700 ${animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-        {/* Welcome */}
-        <h2 className="text-4xl font-bold mb-6 text-blue-700">
-          Welcome, {displayName}!
-        </h2>
-        <p className="mb-8 text-gray-700 text-xl max-w-4xl leading-relaxed">
-          Your personalized patient portal for MedSync Hospital:  
-          Track appointments, prescriptions, and securely manage your health records in one place.  
-          Instant alerts, health tips, and access to your care team anytime.
-        </p>
+      <main
+        className={`relative z-10 flex-grow pt-24 pb-10 px-4 sm:px-8 lg:px-16 transition-all duration-700 ${
+          animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
+      >
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Hero wellness strip */}
+          <section className="rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.10)] px-5 sm:px-8 py-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-sky-600">
+                MedSync patient space
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-semibold">
+                Hello,{" "}
+                <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">
+                  {displayName}
+                </span>
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+                This is your personal dashboard. See your upcoming visit, current
+                prescriptions, and simple guidance to stay on top of your health.
+              </p>
+            </div>
 
-        {/* Patient Stats Cards */}
-        <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto">
-          {stats.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-xl p-6 flex flex-col items-start bg-gradient-to-br ${card.color}
-              transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="flex items-center justify-between w-full">
-                <div className="text-blue-800 text-3xl font-bold">{card.value}</div>
-                <div className="text-3xl text-blue-600">{card.icon}</div>
+            {/* Wellness score + next appointment */}
+            <div className="flex flex-col gap-4 w-full lg:w-80">
+              <div className="rounded-2xl bg-slate-900 text-slate-50 px-4 py-3 shadow-lg">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-sky-300 mb-2">
+                  Wellness score
+                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-semibold">{wellnessScore}</p>
+                    <p className="text-xs text-slate-300">
+                      Based on activity, vitals, and recent visits.
+                    </p>
+                  </div>
+                  <div className="h-14 w-14 rounded-full border border-sky-400/40 flex items-center justify-center">
+                    <FaHeart className="text-sky-300 text-xl" />
+                  </div>
+                </div>
               </div>
-              <div className="text-base text-gray-700 font-medium mt-3">{card.label}</div>
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 text-xs sm:text-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 mb-1">
+                  Next appointment
+                </p>
+                <p className="font-medium text-slate-900">
+                  {nextAppointment.time}
+                </p>
+                <p className="text-slate-600 mt-1">
+                  {nextAppointment.dept} · {nextAppointment.doctor}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/appointments")}
+                  className="mt-2 text-[11px] font-semibold text-sky-600 hover:text-emerald-600"
+                >
+                  View all appointments →
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
+          </section>
 
-        {/* Pure Patient Actions Grid */}
-        <div className="mb-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto">
-          {actions.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-lg p-7 bg-gradient-to-br ${card.color} flex flex-col items-center transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="text-3xl mb-3 text-blue-700">{card.icon}</div>
-              <div className="font-bold text-base text-gray-900 text-center mb-2">{card.label}</div>
-              <div className="text-gray-600 text-sm text-center">{card.desc}</div>
+          {/* Two-column main area */}
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1.2fr)]">
+            {/* LEFT: quick access and shortcuts */}
+            <div className="space-y-5">
+              {/* Quick access row */}
+              <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/appointments")}
+                  className="rounded-2xl bg-sky-50 border border-sky-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
+                >
+                  <div className="flex items-center gap-2 text-sky-700">
+                    <FaCalendarAlt />
+                    <span className="font-semibold">Appointments</span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    Book or reschedule visits.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/prescriptions")}
+                  className="rounded-2xl bg-emerald-50 border border-emerald-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
+                >
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <FaFilePrescription />
+                    <span className="font-semibold">Prescriptions</span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    See your current medicines.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/records")}
+                  className="rounded-2xl bg-slate-50 border border-slate-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
+                >
+                  <div className="flex items-center gap-2 text-slate-800">
+                    <FaHistory />
+                    <span className="font-semibold">Records</span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    Lab reports & history.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/notifications")}
+                  className="rounded-2xl bg-amber-50 border border-amber-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
+                >
+                  <div className="flex items-center gap-2 text-amber-700">
+                    <FaBell />
+                    <span className="font-semibold">Alerts</span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    Reminders & updates.
+                  </p>
+                </button>
+              </section>
+
+              {/* Health journey (timeline style list) */}
+              <section className="rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-sm px-4 sm:px-6 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Recent health journey
+                  </h3>
+                  <span className="text-[11px] text-sky-600 cursor-pointer hover:text-emerald-600">
+                    View full history
+                  </span>
+                </div>
+                <ol className="relative border-l border-slate-200 ml-2 text-xs sm:text-sm space-y-4">
+                  <li className="ml-3">
+                    <div className="absolute -left-2.5 mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    <p className="font-medium text-slate-900">
+                      Cardiology follow-up
+                    </p>
+                    <p className="text-slate-500">
+                      25 Nov 2025 · ECG and consultation, medication adjusted.
+                    </p>
+                  </li>
+                  <li className="ml-3">
+                    <div className="absolute -left-2.5 mt-1 h-2.5 w-2.5 rounded-full bg-sky-500" />
+                    <p className="font-medium text-slate-900">
+                      Lab tests completed
+                    </p>
+                    <p className="text-slate-500">
+                      18 Nov 2025 · Blood work and lipid profile.
+                    </p>
+                  </li>
+                  <li className="ml-3">
+                    <div className="absolute -left-2.5 mt-1 h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    <p className="font-medium text-slate-900">
+                      Initial consultation
+                    </p>
+                    <p className="text-slate-500">
+                      05 Nov 2025 · First visit to MedSync Hospital.
+                    </p>
+                  </li>
+                </ol>
+              </section>
+
+              {/* Support card */}
+              <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-sky-900 to-slate-900 text-slate-50 px-5 py-4 shadow-[0_12px_40px_rgba(15,23,42,0.50)] flex items-center justify-between gap-4">
+                <div className="space-y-1 text-xs sm:text-sm">
+                  <p className="uppercase tracking-[0.18em] text-sky-300 text-[10px]">
+                    Need assistance?
+                  </p>
+                  <p className="font-medium">
+                    Talk to support or your care team directly.
+                  </p>
+                  <p className="text-slate-300">
+                    For emergencies, always contact local emergency services.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/patient/support")}
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition"
+                >
+                  <FaMobileAlt />
+                  Contact support
+                </button>
+              </section>
             </div>
-          ))}
-        </div>
 
-        {/* About Section */}
-        <section className="mb-16 max-w-5xl mx-auto bg-white/50 rounded-xl p-8 shadow-md">
-          <h3 className="text-xl font-bold text-blue-700 mb-5">About MedSync Patient Portal</h3>
-          <p className="text-gray-700 text-lg max-w-6xl leading-relaxed">
-            Get the care, transparency, and convenience you deserve—from secure health record access to easy bookings and reminders, your MedSync journey is built for patients first.
-          </p>
-        </section>
+            {/* RIGHT: cards focused on the patient experience */}
+            <aside className="space-y-4">
+              {/* “My day” card */}
+              <section className="rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-sm px-5 py-5 text-xs sm:text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">
+                  My day with MedSync
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <span className="mt-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        Morning check-in
+                      </p>
+                      <p className="text-slate-600">
+                        Take prescribed meds and log how you feel in your
+                        notes.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-0.5 h-2 w-2 rounded-full bg-sky-500" />
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        Activity reminder
+                      </p>
+                      <p className="text-slate-600">
+                        Aim for at least 20–30 minutes of light activity.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-0.5 h-2 w-2 rounded-full bg-amber-500" />
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        Evening review
+                      </p>
+                      <p className="text-slate-600">
+                        Note any unusual symptoms to discuss in your next visit.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
+              {/* Simple highlights */}
+              <section className="rounded-3xl bg-slate-50/80 border border-slate-100 px-5 py-4 text-xs sm:text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                  Highlights
+                </p>
+                <div className="space-y-2">
+                  <p className="text-slate-700">
+                    • No pending hospital bills right now.
+                  </p>
+                  <p className="text-slate-700">
+                    • 1 prescription is active and synced with MedSync pharmacy.
+                  </p>
+                  <p className="text-slate-700">
+                    • You have 2 upcoming visits scheduled.
+                  </p>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </div>
       </main>
+
       <PatientFooter />
     </div>
   );

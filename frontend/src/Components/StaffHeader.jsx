@@ -1,83 +1,131 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const StaffHeader = () => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/');
+    localStorage.removeItem("user");
+    navigate("/");
+    setMenuOpen(false);
+  };
+
+  const handleGo = (path) => {
+    navigate(path);
     setMenuOpen(false);
   };
 
   return (
-    <header className="w-full bg-sky-100 shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-5 py-2 flex items-center justify-between gap-10">
-        <div
-          className="flex items-center gap-4 cursor-pointer"
-          onClick={() => { navigate('/staff/dashboard'); setMenuOpen(false); }}
-          role="button"
-          tabIndex={0}
-          aria-label="Go to staff dashboard"
-          onKeyPress={e => { if (e.key === "Enter") navigate('/staff/dashboard'); }}
-        >
-          <img
-            src="/logo.png"
-            alt="MedSync Logo"
-            className="w-10 h-10 object-contain"
-          />
-          <span className="text-2xl font-extrabold text-gray-900 select-none">
-            MedSync
-          </span>
+    <header className="w-full sticky top-0 z-50 bg-white border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="h-16 flex items-center justify-between">
+          {/* Logo + brand */}
+          <button
+            className="flex items-center gap-3 cursor-pointer !bg-transparent !border-none hover:opacity-90 transition"
+            onClick={() => handleGo("/staff/dashboard")}
+            aria-label="Go to staff dashboard"
+          >
+            <img
+              src="/logo.png"
+              alt="MedSync Logo"
+              className="w-9 h-9 object-contain"
+            />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-lg font-extrabold text-slate-900 select-none">
+                MedSync
+              </span>
+              <span className="text-[11px] font-medium text-sky-700 tracking-wide uppercase">
+                Staff Panel
+              </span>
+            </div>
+          </button>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+            <button
+              className="text-sm font-medium text-slate-700 hover:text-sky-600 px-3 py-1.5 rounded-full transition !bg-transparent !border-none"
+              onClick={() => handleGo("/staff/appointment-confirmation")}
+            >
+              Appointment Confirmation
+            </button>
+            <button
+              className="text-sm font-medium text-slate-700 hover:text-sky-600 px-3 py-1.5 rounded-full transition !bg-transparent !border-none"
+              onClick={() => handleGo("/staff/patients-records")}
+            >
+              Patients Records
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-semibold text-white px-3 py-1.5 rounded-full transition !bg-rose-400 !border-none"
+            >
+              Logout
+            </button>
+          </nav>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMenuOpen((m) => !m)}
+            aria-label={menuOpen ? "Close menu" : "Toggle menu"}
+            className="md:hidden text-slate-700 focus:outline-none inline-flex items-center justify-center rounded-md p-2 hover:bg-slate-100 transition"
+          >
+            {menuOpen ? (
+              <svg
+                className="w-7 h-7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg
+                className="w-7 h-7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
         </div>
-        {/* Hamburger for mobile */}
-        <button
-          onClick={() => setMenuOpen(m => !m)}
-          aria-label="Toggle menu"
-          className="md:hidden text-gray-700 focus:outline-none"
-        >
-          {menuOpen ? (
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          ) : (
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          )}
-        </button>
-        {/* Navigation */}
-        <nav className={`${menuOpen ? 'flex' : 'hidden'} flex-col absolute top-full left-0 right-0 bg-sky-100 shadow-md rounded-b-lg py-3 px-4 space-y-2 md:space-y-0 md:flex md:flex-row md:items-center md:space-x-6 md:static md:bg-inherit md:shadow-none md:rounded-none md:py-0 md:px-0`}>
-          <button
-            className="text-black px-5 py-2 rounded-md font-semibold hover:text-blue-600 transition flex items-center gap-2 !bg-transparent !border-none"
-            onClick={() => { navigate('/staff/appointment-confirmation'); setMenuOpen(false); }}
-          >
-            Appointment Confirmation
-          </button>
-          {/* <button
-            className="text-black px-5 py-2 rounded-md font-semibold hover:text-blue-600 transition flex items-center gap-2 !bg-transparent !border-none"
-            onClick={() => { navigate('/staff/doctor-schedule'); setMenuOpen(false); }}
-          >
-            Doctor Schedule
-          </button> */}
-          <button
-            className="text-black px-5 py-2 rounded-md font-semibold hover:text-blue-600 transition flex items-center gap-2 !bg-transparent !border-none"
-            onClick={() => { navigate('/staff/patients-records'); setMenuOpen(false); }}
-          >
-            Patients Records
-          </button>
-          <button
-            onClick={handleLogout}
-            className="text-red-600 px-4 py-2 rounded-md font-semibold transition hover:!text-black !bg-transparent !border-none"
-          >
-            Logout ➜ 🚪
-          </button>
-        </nav>
       </div>
+
+      {/* Mobile nav */}
+      {menuOpen && (
+        <div className="md:hidden bg-white border-b border-slate-200 shadow-sm">
+          <nav className="px-4 pb-4 pt-2 space-y-1">
+            <button
+              className="block w-full text-left text-sm font-medium text-slate-800 px-2 py-2 rounded-md hover:bg-slate-100 transition !bg-transparent !border-none"
+              onClick={() => handleGo("/staff/appointment-confirmation")}
+            >
+              Appointment Confirmation
+            </button>
+            <button
+              className="block w-full text-left text-sm font-medium text-slate-800 px-2 py-2 rounded-md hover:bg-slate-100 transition !bg-transparent !border-none"
+              onClick={() => handleGo("/staff/patients-records")}
+            >
+              Patients Records
+            </button>
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left text-sm font-semibold text-white px-2 py-2 rounded-md hover:bg-rose-50 transition !bg-rose-400 !border-none"
+            >
+              Logout
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

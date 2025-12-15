@@ -8,113 +8,132 @@ const PatientHeader = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/");
+    setMenuOpen(false);
+  };
+
+  const handleGo = (path) => {
+    navigate(path);
+    setMenuOpen(false);
   };
 
   return (
-    <header className="w-full bg-sky-100 flex items-center justify-between px-2 py-2 shadow-md sticky top-0 z-50">
-      {/* Logo and Brand Name (clickable) */}
-      <button
-        className="flex items-center gap-2 !bg-transparent !border-none focus:outline-none"
-        onClick={() => navigate("/patient/dashboard")}
-        aria-label="Go to Patient Dashboard"
-      >
-        <img src="/logo.png" alt="MedSync Logo" className="w-10 h-10 object-contain" />
-        <span className="text-2xl font-extrabold text-black tracking-wide">MedSync</span>
-      </button>
+    <header className="w-full sticky top-0 z-50 bg-white border-b border-slate-200">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="h-16 flex items-center justify-between">
+          {/* Logo and Brand */}
+          <button
+            className="flex items-center gap-2 !bg-transparent !border-none hover:opacity-90 transition"
+            onClick={() => handleGo("/patient/dashboard")}
+            aria-label="Go to Patient Dashboard"
+          >
+            <img
+              src="/logo.png"
+              alt="MedSync Logo"
+              className="w-9 h-9 object-contain"
+            />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-lg font-extrabold text-slate-900 tracking-wide">
+                MedSync
+              </span>
+              <span className="text-[11px] font-medium text-sky-600 tracking-wide uppercase">
+                Patient Portal
+              </span>
+            </div>
+          </button>
 
-      {/* Desktop Nav */}
-      <nav className="hidden md:flex items-center gap-5">
-        <button
-          onClick={() => navigate("/patient/appointments")}
-          className="!bg-transparent !border-none text-black hover:text-blue-600 px-4 py-2 rounded transition font-semibold"
-        >
-          Appointments
-        </button>
-
-        {/* NEW: Available Doctors link for patients */}
-        <button
-          onClick={() => navigate("/patient/doctors")}
-          className="!bg-transparent !border-none text-black hover:text-blue-600 px-4 py-2 rounded transition font-semibold"
-        >
-          Our Doctors
-        </button>
-
-        <button
-          onClick={() => navigate("/patient/profile")}
-          className="!bg-transparent !border-none text-black hover:text-blue-600 px-4 py-2 rounded transition font-semibold"
-        >
-          Profile
-        </button>
-        <button
-          onClick={handleLogout}
-          className="!bg-transparent !border-none hover:!text-black text-red-600 px-4 py-2 rounded transition font-semibold"
-        >
-          Logout➜🚪
-        </button>
-      </nav>
-
-      {/* Hamburger for Mobile */}
-      <button
-        className="md:hidden !bg-transparent !border-none flex items-center px-2 py-1"
-        onClick={() => setMenuOpen(!menuOpen)}
-        aria-label="Open patient menu"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-8 w-8 text-blue-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-        </svg>
-      </button>
-
-      {/* Mobile Menu Drawer */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-[999] md:hidden bg-black/30">
-          <div className="fixed top-0 right-0 h-full w-64 bg-white shadow-xl px-6 py-10 flex flex-col gap-4">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <button
-              className="self-end text-2xl text-blue-500 mb-4"
-              onClick={() => setMenuOpen(false)}
-            >
-              &times;
-            </button>
-            <button
-              onClick={() => {
-                setMenuOpen(false);
-                navigate("/patient/appointments");
-              }}
-              className="text-black hover:text-blue-600 text-lg font-semibold px-2 py-2 !bg-transparent !border-none rounded transition text-left"
+              onClick={() => handleGo("/patient/appointments")}
+              className="!bg-transparent !border-none text-sm font-medium text-slate-700 hover:text-sky-600 px-3 py-1.5 rounded-full transition"
             >
               Appointments
             </button>
             <button
-              onClick={() => {
-                setMenuOpen(false);
-                navigate("/patient/doctors");
-              }}
-              className="text-black hover:text-blue-600 text-lg font-semibold px-2 py-2 !bg-transparent !border-none rounded transition text-left"
+              onClick={() => handleGo("/patient/doctors")}
+              className="!bg-transparent !border-none text-sm font-medium text-slate-700 hover:text-sky-600 px-3 py-1.5 rounded-full transition"
             >
-             Doctors
+              Our Doctors
             </button>
             <button
-              onClick={() => {
-                setMenuOpen(false);
-                navigate("/patient/profile");
-              }}
-              className="text-black hover:text-blue-600 text-lg font-semibold px-2 py-2 !bg-transparent !border-none rounded transition text-left"
+              onClick={() => handleGo("/patient/profile")}
+              className="!bg-transparent !border-none text-sm font-medium text-slate-700 hover:text-sky-600 px-3 py-1.5 rounded-full transition"
             >
               Profile
             </button>
             <button
-              onClick={() => {
-                setMenuOpen(false);
-                handleLogout();
-              }}
-              className="hover:text-black text-red-600 text-lg font-semibold px-2 py-2 !bg-transparent !border-none rounded transition text-left"
+              onClick={handleLogout}
+              className="!bg-rose-400 !border-none text-sm font-semibold text-white  px-3 py-1.5 rounded-full transition"
             >
-              Logout➜🚪
+              Logout
+            </button>
+          </nav>
+
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden !bg-transparent !border-none inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:bg-slate-100 transition"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label={menuOpen ? "Close patient menu" : "Open patient menu"}
+          >
+            {menuOpen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-7 w-7"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-7 w-7"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[999] md:hidden bg-black/30">
+          <div className="fixed top-0 right-0 h-full w-64 bg-white shadow-xl px-6 py-8 flex flex-col gap-3">
+            <button
+              className="self-end text-2xl text-sky-600 mb-3"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close patient menu"
+            >
+              &times;
+            </button>
+            <button
+              onClick={() => handleGo("/patient/appointments")}
+              className="text-slate-900 hover:text-sky-600 text-sm font-medium px-2 py-2 !bg-transparent !border-none rounded-md transition text-left"
+            >
+              Appointments
+            </button>
+            <button
+              onClick={() => handleGo("/patient/doctors")}
+              className="text-slate-900 hover:text-sky-600 text-sm font-medium px-2 py-2 !bg-transparent !border-none rounded-md transition text-left"
+            >
+              Our Doctors
+            </button>
+            <button
+              onClick={() => handleGo("/patient/profile")}
+              className="text-slate-900 hover:text-sky-600 text-sm font-medium px-2 py-2 !bg-transparent !border-none rounded-md transition text-left"
+            >
+              Profile
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-rose-600 hover:text-rose-700 text-sm font-semibold px-2 py-2 !bg-transparent !border-none rounded-md transition text-left bg-rose-400"
+            >
+              Logout
             </button>
           </div>
         </div>

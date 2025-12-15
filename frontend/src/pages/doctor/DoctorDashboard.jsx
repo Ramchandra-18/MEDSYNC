@@ -1,84 +1,226 @@
 import React, { useEffect, useState } from "react";
-import DoctorHeader from '../../Components/DoctorHeader';
-import DoctorFooter from '../../Components/DoctorFooter';
-import { getFullNameFromToken } from '../../utils/jwt';
-import { FaUserMd, FaCalendarAlt, FaUserInjured, FaNotesMedical, FaBell, FaClipboardList, FaFilePrescription, FaComments } from 'react-icons/fa';
+import DoctorHeader from "../../Components/DoctorHeader";
+import DoctorFooter from "../../Components/DoctorFooter";
+import { getFullNameFromToken } from "../../utils/jwt";
+import {
+  FaUserMd,
+  FaCalendarAlt,
+  FaUserInjured,
+  FaNotesMedical,
+  FaBell,
+  FaClipboardList,
+  FaFilePrescription,
+  FaComments,
+} from "react-icons/fa";
 
 const stats = [
-  { value: 27, label: "Today's Queue", color: "from-sky-200 to-blue-100", icon: <FaCalendarAlt /> },
-  { value: 9, label: "Upcoming Appointments", color: "from-blue-200 to-sky-100", icon: <FaClipboardList /> },
-  { value: 4, label: "Critical Alerts", color: "from-red-100 to-pink-100", icon: <FaBell /> },
+  {
+    value: 27,
+    label: "Today's queue",
+    color: "from-sky-400/15 via-sky-300/10 to-sky-400/5",
+    icon: <FaCalendarAlt />,
+  },
+  {
+    value: 9,
+    label: "Upcoming appointments",
+    color: "from-emerald-400/15 via-emerald-300/10 to-emerald-400/5",
+    icon: <FaClipboardList />,
+  },
+  {
+    value: 4,
+    label: "Critical alerts",
+    color: "from-rose-400/15 via-rose-300/10 to-rose-400/5",
+    icon: <FaBell />,
+  },
 ];
 
 const actions = [
-  { label: "Patient Records", color: "from-sky-100 to-blue-100", icon: <FaUserInjured />, desc: "Access and update medical history securely" },
-  { label: "Prescribe Medication", color: "from-blue-100 to-cyan-100", icon: <FaFilePrescription />, desc: "Write prescriptions and review pharmacy status" },
-  { label: "Consultation Notes", color: "from-indigo-100 to-sky-100", icon: <FaNotesMedical />, desc: "Document treatment, symptoms, progress" },
-  { label: "Messages", color: "from-blue-100 to-white", icon: <FaComments />, desc: "Communicate with patients and staff" },
-  { label: "Schedule Manager", color: "from-cyan-100 to-blue-50", icon: <FaCalendarAlt />, desc: "Plan & manage weekly work hours" },
-  { label: "Collaboration Board", color: "from-pink-100 to-blue-100", icon: <FaUserMd />, desc: "Coordinate with pharmacy, nursing, admin" },
+  {
+    label: "Patient records",
+    color: "from-sky-50 to-blue-50",
+    icon: <FaUserInjured />,
+    desc: "Access and update medical history securely.",
+  },
+  {
+    label: "Prescribe medication",
+    color: "from-emerald-50 to-sky-50",
+    icon: <FaFilePrescription />,
+    desc: "Write prescriptions and review pharmacy status.",
+  },
+  {
+    label: "Consultation notes",
+    color: "from-indigo-50 to-sky-50",
+    icon: <FaNotesMedical />,
+    desc: "Document treatment details, symptoms, and progress.",
+  },
+  {
+    label: "Messages",
+    color: "from-sky-50 to-white",
+    icon: <FaComments />,
+    desc: "Communicate with patients and staff.",
+  },
+  {
+    label: "Schedule manager",
+    color: "from-cyan-50 to-blue-50",
+    icon: <FaCalendarAlt />,
+    desc: "Plan and manage weekly work hours.",
+  },
+  {
+    label: "Collaboration board",
+    color: "from-rose-50 to-sky-50",
+    icon: <FaUserMd />,
+    desc: "Coordinate with pharmacy, nursing, and admin.",
+  },
 ];
 
 const DoctorDashboardContent = () => {
-  const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('currentUser') || 'null');
-  const token = localStorage.getItem('jwtToken');
+  const user =
+    JSON.parse(localStorage.getItem("user")) ||
+    JSON.parse(localStorage.getItem("currentUser") || "null");
+  const token = localStorage.getItem("jwtToken");
   const fullNameFromToken = getFullNameFromToken(token);
-  const displayName = fullNameFromToken || user?.full_name || user?.name || user?.email || 'Doctor';
+  const displayName =
+    fullNameFromToken ||
+    user?.full_name ||
+    user?.name ||
+    user?.email ||
+    "Doctor";
+
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setAnimateIn(true), 200);
+    const t = setTimeout(() => setAnimateIn(true), 200);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="min-h-screen w-screen flex flex-col bg-gradient-to-br from-sky-100 via-sky-200 to-sky-300 font-sans">
-      <DoctorHeader />
+    <div className="min-h-screen w-screen flex flex-col bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 font-sans text-slate-900">
+      {/* background accents */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
 
-      <main className={`pt-20 px-6 max-w-7xl mx-auto w-full flex-grow transition-all duration-700 ${animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-        {/* Title & Quote */}
-        <div className="mb-10">
-          <h2 className="text-5xl sm:text-6xl font-extrabold mb-7 text-blue-800 tracking-wide select-text">
-            Welcome, Dr. {displayName}!
-          </h2>
-          <p className="text-gray-600 text-xl sm:text-2xl italic mb-8 select-text max-w-2xl">
-            “Wherever the art of medicine is loved, there is also a love of humanity.” – Hippocrates
-          </p>
-        </div>
-        
-        {/* Quick Doctor Stats */}
-        <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <DoctorHeader />
+      </div>
+
+      <main
+        className={`relative z-10 pt-24 pb-10 px-4 sm:px-8 lg:px-16 max-w-6xl mx-auto w-full flex-grow transition-all duration-700 ${
+          animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
+      >
+        {/* Hero strip */}
+        <section className="mb-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.10)] px-5 sm:px-7 py-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-sky-600">
+              MedSync · Doctor workspace
+            </p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-900">
+              Welcome,{" "}
+              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">
+                Dr. {displayName}
+              </span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-xl">
+              View today's queue, upcoming visits, and critical alerts at a
+              glance, with one place to start each consultation.
+            </p>
+            <p className="text-xs sm:text-sm italic text-slate-500 mt-1">
+              “Wherever the art of medicine is loved, there is also a love of
+              humanity.” – Hippocrates
+            </p>
+          </div>
+          <div className="flex items-center gap-3 self-start lg:self-auto">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-emerald-500 text-white flex items-center justify-center text-2xl shadow-lg">
+              <FaUserMd />
+            </div>
+            <div className="text-xs text-slate-600">
+              <p className="font-semibold text-slate-900">
+                Today at a glance
+              </p>
+              <p>27 in queue · 9 upcoming · 4 critical alerts</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl">
           {stats.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-xl p-6 flex flex-col items-start bg-gradient-to-br ${card.color}
-              transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="flex items-center justify-between w-full">
-                <div className="text-blue-800 text-3xl font-bold">{card.value}</div>
-                <div className="text-3xl text-blue-600">{card.icon}</div>
+            <div
+              key={card.label}
+              className={`rounded-2xl bg-gradient-to-br ${card.color} border border-white/70 shadow-sm hover:shadow-md transition-transform duration-700 ${
+                animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
+              style={{ transitionDelay: `${120 + idx * 80}ms` }}
+            >
+              <div className="p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-semibold text-slate-900">
+                      {card.value}
+                    </p>
+                    <p className="text-xs text-slate-600 mt-1">
+                      {card.label}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-white/80 border border-slate-100 text-sky-600 text-xl">
+                    {card.icon}
+                  </div>
+                </div>
               </div>
-              <div className="text-base text-gray-700 font-medium mt-3">{card.label}</div>
             </div>
           ))}
-        </div>
+        </section>
 
-        {/* Action/Tools Grid */}
-        <div className="mb-16 grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-5xl">
-          {actions.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-lg p-6 bg-gradient-to-br ${card.color} flex flex-col items-center
-              transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="text-3xl mb-2 text-blue-700">{card.icon}</div>
-              <div className="font-bold text-lg text-gray-900 text-center mb-2">{card.label}</div>
-              <div className="text-gray-600 text-sm text-center">{card.desc}</div>
-            </div>
-          ))}
-        </div>
+        {/* Actions grid */}
+        <section className="mb-10">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">
+            Tools for your day
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
+            {actions.map((card, idx) => (
+              <button
+                key={card.label}
+                type="button"
+                className={`group rounded-2xl bg-gradient-to-br ${card.color} border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-700 flex flex-col items-stretch text-left ${
+                  animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+                style={{ transitionDelay: `${160 + idx * 70}ms` }}
+              >
+                <div className="p-5 flex flex-col gap-3 h-full">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/80 border border-slate-100 text-sky-600 text-lg">
+                        {card.icon}
+                      </div>
+                      <span className="text-sm font-semibold text-slate-900">
+                        {card.label}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 group-hover:text-emerald-500">
+                      Open
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600">{card.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
 
-        {/* Schedule Section */}
-        <section className="mt-10">
-          <h3 className="text-3xl font-semibold text-blue-700 mb-6">Schedule</h3>
-          <p className="text-gray-700 text-lg">
-            Manage your weekly schedule here. (Scheduling features coming soon)
+        {/* Schedule placeholder */}
+        <section className="mt-6 rounded-2xl bg-slate-50/80 border border-slate-100 px-5 py-4 max-w-5xl">
+          <h3 className="text-sm font-semibold text-slate-900 mb-1">
+            Schedule
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600">
+            Manage your weekly schedule here. Detailed scheduling and calendar
+            features will be available soon.
           </p>
         </section>
       </main>
+
       <DoctorFooter />
     </div>
   );

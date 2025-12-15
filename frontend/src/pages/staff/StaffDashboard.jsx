@@ -1,117 +1,273 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import StaffHeader from '../../Components/StaffHeader';
-import StaffFooter from '../../Components/StaffFooter';
-import { getFullNameFromToken } from '../../utils/jwt';
-import { FaCalendarPlus, FaClipboardList, FaUsers, FaUserMd, FaFileAlt, FaBell } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import StaffHeader from "../../Components/StaffHeader";
+import StaffFooter from "../../Components/StaffFooter";
+import { getFullNameFromToken } from "../../utils/jwt";
+import {
+  FaCalendarPlus,
+  FaClipboardList,
+  FaUsers,
+  FaUserMd,
+  FaFileAlt,
+  FaBell,
+} from "react-icons/fa";
 
 const stats = [
-  { value: 12, label: "Today's Appointments", color: "from-blue-200 to-sky-100", icon: <FaCalendarPlus /> },
-  { value: 5, label: "Doctors On Duty", color: "from-indigo-100 to-blue-100", icon: <FaUserMd /> },
-  { value: 38, label: "Registered Patients", color: "from-cyan-100 to-lime-100", icon: <FaUsers /> },
+  {
+    value: 12,
+    label: "Today's appointments",
+    color: "from-sky-400/15 via-sky-300/10 to-sky-400/5",
+    icon: <FaCalendarPlus />,
+  },
+  {
+    value: 5,
+    label: "Doctors on duty",
+    color: "from-indigo-400/15 via-indigo-300/10 to-indigo-400/5",
+    icon: <FaUserMd />,
+  },
+  {
+    value: 38,
+    label: "Registered patients",
+    color: "from-emerald-400/15 via-emerald-300/10 to-emerald-400/5",
+    icon: <FaUsers />,
+  },
 ];
 
 const actions = [
-  { label: "Manage Appointments", icon: <FaClipboardList />, color: "from-blue-100 to-sky-100", desc: "View, reschedule, or cancel patient bookings" },
-  { label: "Doctor Schedules", icon: <FaUserMd />, color: "from-violet-100 to-blue-100", desc: "Keep track of doctor shifts and timings" },
-  { label: "Patient Records", icon: <FaFileAlt />, color: "from-green-100 to-lime-100", desc: "Access, update, or archive medical records" },
-  { label: "Notifications", icon: <FaBell />, color: "from-yellow-100 to-orange-100", desc: "Review alerts, reminders, and urgent messages" },
+  {
+    label: "Manage appointments",
+    icon: <FaClipboardList />,
+    color: "from-sky-50 to-blue-50",
+    desc: "View, reschedule, or cancel patient bookings.",
+  },
+  {
+    label: "Doctor schedules",
+    icon: <FaUserMd />,
+    color: "from-indigo-50 to-sky-50",
+    desc: "Keep track of doctor shifts and timings.",
+  },
+  {
+    label: "Patient records",
+    icon: <FaFileAlt />,
+    color: "from-emerald-50 to-lime-50",
+    desc: "Access, update, or archive medical records.",
+  },
+  {
+    label: "Notifications",
+    icon: <FaBell />,
+    color: "from-amber-50 to-orange-50",
+    desc: "Review alerts, reminders, and urgent messages.",
+  },
 ];
 
 const StaffDashboardMain = () => {
-  const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('currentUser') || 'null');
-  const token = localStorage.getItem('jwtToken');
+  const user =
+    JSON.parse(localStorage.getItem("user")) ||
+    JSON.parse(localStorage.getItem("currentUser") || "null");
+  const token = localStorage.getItem("jwtToken");
   const fullNameFromToken = getFullNameFromToken(token);
-  const displayName = fullNameFromToken || user?.full_name || user?.name || user?.email || 'Staff';
+  const displayName =
+    fullNameFromToken ||
+    user?.full_name ||
+    user?.name ||
+    user?.email ||
+    "Staff";
+
   const navigate = useNavigate();
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setAnimateIn(true), 200);
+    const t = setTimeout(() => setAnimateIn(true), 200);
+    return () => clearTimeout(t);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/');
-  };
-
   const toggleBookingForm = () => {
-    setShowBookingForm(!showBookingForm);
+    setShowBookingForm((prev) => !prev);
   };
 
-  const handleSubmit = (e) => {
+  // UPDATED: navigate to patient appointments with prefill
+  const handleStaffBook = (e) => {
     e.preventDefault();
-    alert("Appointment booked successfully!");
+    const formData = new FormData(e.target);
+
+    const prefill = {
+      fullName: formData.get("fullName") || "",
+      date: formData.get("date") || "",
+      doctorName: formData.get("doctorName") || "",
+    };
+
+    navigate("/patient/appointments", {
+      state: { prefill, fromStaff: true },
+    });
     setShowBookingForm(false);
   };
 
   return (
-    <div className="min-h-screen w-screen font-sans bg-gradient-to-br from-sky-50 via-blue-100 to-cyan-100 flex flex-col">
-      <StaffHeader />
+    <div className="min-h-screen w-screen font-sans bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 flex flex-col text-slate-900">
+      {/* background accents */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
 
-      <main className={`max-w-6xl mx-auto px-6 py-12 flex-grow transition-all duration-700 ${animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-        {/* Title */}
-        <h2 className="text-4xl font-extrabold mb-3 text-blue-700 select-text">
-          Welcome, {displayName}!
-        </h2>
-        <p className="text-gray-700 text-lg mb-10 max-w-3xl leading-relaxed">
-          Manage appointments, coordinate doctors, and keep patient services running smoothly. Stay organized and responsive from this single hub.
-        </p>
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <StaffHeader />
+      </div>
 
-        {/* Staff Stats Cards */}
-        <div className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-          {stats.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-xl p-6 flex flex-col items-start bg-gradient-to-br ${card.color}
-              transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="flex items-center justify-between w-full">
-                <div className="text-blue-900 text-3xl font-bold">{card.value}</div>
-                <div className="text-3xl text-blue-600">{card.icon}</div>
-              </div>
-              <div className="text-base text-gray-700 font-medium mt-3">{card.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Action Grid */}
-        <div className="mb-12 grid grid-cols-1 md:grid-cols-4 gap-8 w-full">
-          {actions.map((card, idx) => (
-            <div key={idx} className={`rounded-2xl shadow-lg p-6 bg-gradient-to-br ${card.color} flex flex-col items-center transition duration-700 ${animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-              <div className="text-3xl mb-2 text-blue-700">{card.icon}</div>
-              <div className="font-bold text-base text-gray-900 text-center mb-1">{card.label}</div>
-              <div className="text-gray-600 text-sm text-center">{card.desc}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* New Appointment Booking (CTA) */}
-        <section className="flex justify-center my-8">
-          <button
-            onClick={toggleBookingForm}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-8 py-3 rounded-lg shadow-xl transition text-lg"
-          >
-            Schedule New Appointment
-          </button>
-        </section>
-
-        {/* Booking Form Modal */}
-        {showBookingForm && (
-          <section className="mt-8 max-w-lg mx-auto bg-white rounded-2xl shadow-2xl p-8 animate-fade-in">
-            <h3 className="text-2xl font-semibold mb-6 text-blue-700">Book New Appointment</h3>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <input type="text" required placeholder="Patient Name" className="border rounded-lg px-4 py-2" />
-              <input type="date" required className="border rounded-lg px-4 py-2" />
-              <select required className="border rounded-lg px-4 py-2">
-                <option value="">Select Doctor</option>
-                <option value="Dr. Smith">Dr. Smith</option>
-                <option value="Dr. Patel">Dr. Patel</option>
-              </select>
-              <button type="submit" className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold py-2 rounded-lg hover:from-blue-700 hover:to-cyan-700 shadow transition">
-                Book Appointment
-              </button>
-            </form>
+      <main
+        className={`relative z-10 flex-grow pt-24 pb-10 px-4 sm:px-8 lg:px-16 flex justify-center transition-all duration-700 ${
+          animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
+      >
+        <div className="w-full max-w-6xl rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.10)] px-5 sm:px-8 py-7">
+          {/* Top text */}
+          <section className="mb-6">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">
+              Welcome,{" "}
+              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">
+                {displayName}
+              </span>
+              !
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-3xl">
+              Manage appointments, coordinate doctors, and keep patient services
+              running smoothly from this staff workspace.
+            </p>
           </section>
-        )}
+
+          {/* Stats */}
+          <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-5">
+            {stats.map((card, idx) => (
+              <div
+                key={card.label}
+                className={`rounded-2xl bg-gradient-to-br ${card.color} border border-white/70 shadow-sm hover:shadow-md transition-transform duration-700 ${
+                  animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+                style={{ transitionDelay: `${120 + idx * 80}ms` }}
+              >
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-3xl font-semibold text-slate-900">
+                        {card.value}
+                      </p>
+                      <p className="text-xs text-slate-600 mt-1">
+                        {card.label}
+                      </p>
+                    </div>
+                    <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-white/80 border border-slate-100 text-sky-600 text-xl">
+                      {card.icon}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {/* Actions + booking CTA row */}
+          <section className="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)]">
+            {/* Actions grid */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">
+                Staff tools
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {actions.map((card, idx) => (
+                  <button
+                    key={card.label}
+                    type="button"
+                    className={`group rounded-2xl bg-gradient-to-br ${card.color} border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-700 flex flex-col items-stretch text-left ${
+                      animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                    }`}
+                    style={{ transitionDelay: `${160 + idx * 70}ms` }}
+                  >
+                    <div className="p-4 flex flex-col gap-2 h-full">
+                      <div className="flex items-center justify-center text-sky-700 text-2xl mb-1">
+                        {card.icon}
+                      </div>
+                      <p className="text-xs font-semibold text-slate-900 text-center">
+                        {card.label}
+                      </p>
+                      <p className="text-[11px] text-slate-600 text-center">
+                        {card.desc}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Schedule new appointment card */}
+            <div className="rounded-2xl bg-slate-50/80 border border-slate-100 p-5 flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">
+                  Schedule new appointment
+                </h3>
+                <p className="text-xs text-slate-600 mb-4">
+                  Quickly create a new booking for walk‑in or phone patients.
+                </p>
+              </div>
+              <button
+                onClick={toggleBookingForm}
+                className="mt-2 inline-flex justify-center items-center rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 shadow-sm hover:brightness-110"
+              >
+                Open booking form
+              </button>
+            </div>
+          </section>
+
+          {/* Booking form inline
+          {showBookingForm && (
+            <section className="mt-4 rounded-2xl bg-white border border-slate-100 shadow-sm p-5 max-w-lg mx-auto">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-4">
+                Book new appointment
+              </h3>
+              <form
+                onSubmit={handleStaffBook}
+                className="flex flex-col gap-4 text-sm"
+              >
+                <input
+                  type="text"
+                  name="fullName"
+                  required
+                  placeholder="Patient name"
+                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+                <input
+                  type="date"
+                  name="date"
+                  required
+                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+                <select
+                  name="doctorName"
+                  required
+                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                >
+                  <option value="">Select doctor</option>
+                  <option value="Dr. Smith">Dr. Smith</option>
+                  <option value="Dr. Patel">Dr. Patel</option>
+                </select>
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={toggleBookingForm}
+                    className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-lg bg-gradient-to-r from-sky-600 to-emerald-600 text-white text-xs font-semibold shadow-sm hover:brightness-110"
+                  >
+                    Continue to patient booking
+                  </button>
+                </div>
+              </form>
+            </section> */}
+          {/* )} */}
+        </div>
       </main>
 
       <StaffFooter />

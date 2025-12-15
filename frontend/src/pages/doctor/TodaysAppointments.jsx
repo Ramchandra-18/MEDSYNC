@@ -1,20 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { FiUser, FiRefreshCw, FiMail, FiCalendar, FiEye } from 'react-icons/fi';
+import React, { useEffect, useState } from "react";
+import { FiUser, FiRefreshCw, FiMail, FiCalendar, FiEye } from "react-icons/fi";
 
 const Avatar = ({ name, large }) => (
-  <div className={`flex items-center justify-center rounded-full shadow-inner font-bold text-blue-700 ${large ? 'w-16 h-16 text-3xl bg-indigo-100' : 'w-10 h-10 text-xl bg-blue-200'}`}>
-    {name ? name.match(/\b(\w)/g).join('') : <FiUser className={large ? 'text-3xl' : 'text-2xl'} />}
+  <div
+    className={`flex items-center justify-center rounded-full shadow-inner font-bold text-sky-700 ${
+      large
+        ? "w-16 h-16 text-3xl bg-sky-100"
+        : "w-10 h-10 text-xl bg-sky-200"
+    }`}
+  >
+    {name && name.match(/\b(\w)/g)
+      ? name.match(/\b(\w)/g).join("")
+      : <FiUser className={large ? "text-3xl" : "text-2xl"} />}
   </div>
 );
 
 const StatusBadge = ({ status }) => (
   <span
-    className={`inline-block px-3 py-1 rounded-lg font-semibold text-xs tracking-wide ${
-      status === 'Confirmed'
-        ? 'bg-green-100 text-green-700'
-        : status === 'Canceled'
-        ? 'bg-red-100 text-red-700'
-        : 'bg-yellow-100 text-yellow-700'
+    className={`inline-block px-3 py-1 rounded-lg font-semibold text-[11px] tracking-wide ${
+      status === "Confirmed"
+        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+        : status === "Canceled"
+        ? "bg-rose-50 text-rose-700 border border-rose-100"
+        : "bg-amber-50 text-amber-700 border border-amber-100"
     }`}
   >
     {status}
@@ -24,10 +32,10 @@ const StatusBadge = ({ status }) => (
 const Skeleton = () => (
   <div className="animate-pulse flex justify-between items-center py-4 px-2">
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gray-200 rounded-full" />
-      <div className="h-4 w-36 bg-gray-200 rounded mb-1" />
+      <div className="w-10 h-10 bg-slate-200 rounded-full" />
+      <div className="h-4 w-36 bg-slate-200 rounded mb-1" />
     </div>
-    <div className="h-6 w-24 bg-gray-200 rounded" />
+    <div className="h-6 w-24 bg-slate-200 rounded" />
   </div>
 );
 
@@ -38,14 +46,16 @@ const TodaysAppointments = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  const token = localStorage.getItem('jwtToken');
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://10.134.68.186:5000';
+  const token = localStorage.getItem("jwtToken");
+  const API_BASE = import.meta.env.VITE_API_BASE;
+
   const getApiBase = () => {
     if (!API_BASE) return null;
-    let base = API_BASE.replace(/\/+$/g, '');
+    let base = API_BASE.replace(/\/+$/g, "");
     if (/\/api(\/|$)/i.test(base)) return base;
-    return base + '/api';
+    return base + "/api";
   };
   const NORMALIZED_API_BASE = getApiBase();
 
@@ -53,14 +63,16 @@ const TodaysAppointments = () => {
     setLoading(true);
     setError(null);
     try {
-      if (!token) throw new Error('Not authenticated');
+      if (!token) throw new Error("Not authenticated");
       if (!NORMALIZED_API_BASE)
-        throw new Error('VITE_API_BASE is not set. Please add it to your .env and restart the dev server.');
+        throw new Error(
+          "VITE_API_BASE is not set. Please add it to your .env and restart the dev server."
+        );
       const url = `${NORMALIZED_API_BASE}/doctor/todays-appointments`;
       const res = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -69,19 +81,27 @@ const TodaysAppointments = () => {
         throw new Error(body || `Request failed with status ${res.status}`);
       }
       const data = await res.json();
-      setAppointments(Array.isArray(data.appointments) ? data.appointments : []);
+      setAppointments(
+        Array.isArray(data.appointments) ? data.appointments : []
+      );
       setDate(data.date || null);
       setDoctorName(data.doctor_name || null);
-      setTotal(typeof data.total === 'number' ? data.total : (data.appointments || []).length);
+      setTotal(
+        typeof data.total === "number"
+          ? data.total
+          : (data.appointments || []).length
+      );
     } catch (err) {
-      const msg = err?.message || 'Failed to load appointments';
+      const msg = err?.message || "Failed to load appointments";
       if (
-        msg.toLowerCase().includes('failed to fetch') ||
-        msg.toLowerCase().includes('networkrequest failed') ||
-        msg.toLowerCase().includes('networkerror')
+        msg.toLowerCase().includes("failed to fetch") ||
+        msg.toLowerCase().includes("networkrequest failed") ||
+        msg.toLowerCase().includes("networkerror")
       ) {
         setError(
-          `Failed to fetch from ${NORMALIZED_API_BASE || API_BASE}. Possible causes: backend not running, incorrect VITE_API_BASE, or CORS blocking the request. Check the API server and CORS settings.`
+          `Failed to fetch from ${
+            NORMALIZED_API_BASE || API_BASE
+          }. Backend may be down, VITE_API_BASE may be wrong, or CORS may be blocking the request.`
         );
       } else {
         setError(msg);
@@ -95,9 +115,8 @@ const TodaysAppointments = () => {
     }
   };
 
-  // Example of a handler - customize as needed (e.g., open modal, navigate)
   const handleViewClick = (appointment) => {
-    alert(`Viewing appointment for ${appointment.full_name}\n\nYou can replace this alert with your modal or navigation logic.`);
+    setSelectedAppointment(appointment);
   };
 
   useEffect(() => {
@@ -105,44 +124,66 @@ const TodaysAppointments = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const todayLabel = date
+    ? new Date(date).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
   return (
-    <div className="min-h-screen w-screen bg-gradient-to-br from-indigo-100 via-sky-50 to-blue-100 flex flex-col font-sans">
-      <header className="w-full py-8 px-4 md:px-12 bg-white/70 flex flex-col md:flex-row md:items-center md:justify-between shadow-lg">
-        <div className="flex items-center gap-6">
+    <div className="min-h-screen w-screen bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 flex flex-col font-sans text-slate-900">
+      {/* background accents */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 w-full py-6 px-4 md:px-10 bg-white/80 backdrop-blur-xl shadow-sm flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-100">
+        <div className="flex items-center gap-4">
           <Avatar name={doctorName} large />
           <div>
-            <div className="text-2xl font-semibold text-indigo-900">
-              Hello, {doctorName ? doctorName.split(' ')[0] : 'Doctor'}!
+            <div className="text-xl sm:text-2xl font-semibold text-slate-900">
+              Hello, {doctorName ? doctorName.split(" ")[0] : "Doctor"}!
             </div>
-            <div className="flex items-center gap-2 text-gray-500 text-sm mt-1">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 mt-1">
               <FiCalendar />
-              <span>
-                {date
-                  ? new Date(date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-                  : new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
+              <span>{todayLabel}</span>
             </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Today&apos;s appointment overview from your MedSync schedule.
+            </p>
           </div>
         </div>
         <button
           onClick={fetchAppointments}
-          className="flex items-center gap-2 px-5 py-2 !bg-blue-600 text-white rounded-lg shadow-md hover:bg-indigo-800 mt-8 md:mt-0 transition"
+          className="mt-4 md:mt-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 text-white text-xs sm:text-sm font-semibold shadow-sm hover:brightness-110"
         >
           <FiRefreshCw /> Refresh
         </button>
       </header>
 
-      <main className="flex-1 w-full flex justify-center items-stretch py-6 md:py-10">
-        <div className="bg-white/90 border border-blue-100 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-4xl h-full flex flex-col mx-2 md:mx-auto p-0 md:p-0 overflow-hidden">
-          <div className="flex items-center justify-between px-8 py-4 border-b">
-            <div className="text-lg font-bold text-blue-700">
-              Today's Appointments
+      {/* Main content */}
+      <main className="relative z-10 flex-1 w-full flex flex-col py-6 md:py-8">
+        <div className="w-full max-w-4xl mx-2 md:mx-auto rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.10)] flex flex-col overflow-hidden">
+          {/* List header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="text-sm sm:text-base font-semibold text-slate-900">
+              Today&apos;s appointments
             </div>
-            <div className="text-blue-900 font-semibold">
-              {total} {total === 1 ? 'appointment' : 'appointments'}
+            <div className="text-xs sm:text-sm font-semibold text-sky-700">
+              {total} {total === 1 ? "appointment" : "appointments"}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto px-3 py-2 md:px-7 md:py-6 space-y-6">
+
+          {/* List body */}
+          <div className="flex-1 overflow-y-auto px-3 py-3 md:px-6 md:py-5 space-y-4">
             {loading && (
               <div>
                 {Array(4)
@@ -152,52 +193,155 @@ const TodaysAppointments = () => {
                   ))}
               </div>
             )}
-            {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">{error}</div>
+
+            {error && !loading && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm p-3 rounded-xl">
+                {error}
+              </div>
             )}
+
             {!loading && !error && appointments.length === 0 && (
-              <div className="text-gray-700 text-center py-16 text-lg font-medium">
+              <div className="text-slate-500 text-center py-12 text-sm sm:text-base font-medium">
                 No appointments scheduled for today.
               </div>
             )}
+
             {!loading &&
+              !error &&
               appointments.length > 0 &&
               appointments.map((a) => (
                 <div
                   key={a.id}
-                  className="flex flex-col md:flex-row md:items-center justify-between bg-white/90 border border-blue-100 shadow rounded-2xl px-5 py-4 transition hover:shadow-lg"
+                  className="flex flex-col md:flex-row md:items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 shadow-sm hover:shadow-md transition"
                 >
-                  <div className="flex items-center gap-4 mb-3 md:mb-0">
+                  <div className="flex items-center gap-3 mb-2 md:mb-0">
                     <Avatar name={a.full_name} />
                     <div>
-                      <div className="font-bold text-indigo-900 text-xl">{a.full_name}</div>
-                      <div className="text-xs text-gray-600 mt-1">
-                        <span className="inline-block">{a.department}</span> • <span>{a.patient_id}</span>
+                      <div className="font-semibold text-slate-900 text-sm sm:text-base">
+                        {a.full_name}
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                        <FiMail /> {a.patient_email}
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {a.department || "Department"} · {a.patient_id || "ID"}
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">Created: {a.created_at ? new Date(a.created_at).toLocaleString() : '—'}</div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
+                        <FiMail className="text-[11px]" />{" "}
+                        {a.patient_email || "No email"}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Created:{" "}
+                        {a.created_at
+                          ? new Date(a.created_at).toLocaleString()
+                          : "—"}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col md:items-end space-y-2 md:space-y-0 md:gap-3">
-                    <div className="flex gap-2 items-center mb-2 md:mb-0">
+
+                  <div className="flex flex-col md:items-end gap-1">
+                    <div className="flex items-center gap-2 mb-1">
                       <StatusBadge status={a.status} />
                       <button
-                        className="flex items-center gap-1 px-3 py-1 !bg-indigo-600 text-white rounded-lg font-medium shadow hover:bg-indigo-800 transition text-xs"
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg !bg-sky-600 text-white text-[11px] font-semibold shadow hover:bg-sky-700"
                         onClick={() => handleViewClick(a)}
-                        title="View Details"
+                        title="View details"
                       >
                         <FiEye /> View
                       </button>
                     </div>
-                    <div className="font-semibold text-blue-800 text-lg text-right">{a.appointment_time}</div>
-                    <div className="text-xs text-gray-500 text-right">{a.appointment_date}</div>
+                    <div className="text-sm font-semibold text-slate-900 text-right">
+                      {a.appointment_time}
+                    </div>
+                    <div className="text-[11px] text-slate-500 text-right">
+                      {a.appointment_date}
+                    </div>
                   </div>
                 </div>
               ))}
           </div>
         </div>
+
+        {/* Details panel */}
+        {selectedAppointment && (
+          <section className="w-full max-w-4xl mx-2 md:mx-auto mt-4">
+            <div className="rounded-3xl bg-white/95 border border-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.18)] p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm sm:text-base font-semibold text-slate-900">
+                  Appointment details
+                </h2>
+                <button
+                  onClick={() => setSelectedAppointment(null)}
+                  className="text-[11px] text-rose-600 hover:text-rose-700 !bg-transparent  font-semibold"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+                <div className="p-3 rounded-xl bg-sky-50 border border-sky-100">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Patient
+                  </div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    {selectedAppointment.full_name}
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    ID: {selectedAppointment.patient_id || "—"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Contact
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-700">
+                    <FiMail /> {selectedAppointment.patient_email || "—"}
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    Phone: {selectedAppointment.phone || "—"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Appointment
+                  </div>
+                  <div className="text-xs text-slate-800">
+                    {selectedAppointment.appointment_date} ·{" "}
+                    {selectedAppointment.appointment_time}
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    Department: {selectedAppointment.department || "—"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Status
+                  </div>
+                  <StatusBadge status={selectedAppointment.status} />
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    Created:{" "}
+                    {selectedAppointment.created_at
+                      ? new Date(
+                          selectedAppointment.created_at
+                        ).toLocaleString()
+                      : "—"}
+                  </div>
+                </div>
+
+                {selectedAppointment.symptoms && (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 md:col-span-2">
+                    <div className="text-[11px] font-semibold text-slate-500">
+                      Symptoms / notes
+                    </div>
+                    <div className="text-xs text-slate-800 mt-1 whitespace-pre-line">
+                      {selectedAppointment.symptoms}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

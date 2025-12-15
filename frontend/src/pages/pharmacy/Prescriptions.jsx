@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import PharmacyHeader from "../../Components/PharmacyHeader";
 import PharmacyFooter from "../../Components/PharmacyFooter";
-// import { Document, Page, ... } from "@react-pdf/renderer"; // keep if you need PDFs!
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -9,12 +8,26 @@ const PrescriptionsPage = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total_count: 0, total_pages: 1 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total_count: 0,
+    total_pages: 1,
+  });
   const [filters, setFilters] = useState({
-    page: 1, limit: 10, sort_by: "created_at", sort_order: "desc",
-    patient_email: "", patient_name: "", doctor_name: "",
-    doctor_code: "", department: "", disease: "",
-    prescription_date: "", date_from: "", date_to: ""
+    page: 1,
+    limit: 10,
+    sort_by: "created_at",
+    sort_order: "desc",
+    patient_email: "",
+    patient_name: "",
+    doctor_name: "",
+    doctor_code: "",
+    department: "",
+    disease: "",
+    prescription_date: "",
+    date_from: "",
+    date_to: "",
   });
 
   // Modal State
@@ -26,35 +39,60 @@ const PrescriptionsPage = () => {
   const [sendBillLoading, setSendBillLoading] = useState(false);
   const [billResponse, setBillResponse] = useState(null);
 
-  // Fetch prescriptions from API
+  // Fetch prescriptions
   const fetchPrescriptions = async () => {
     setLoading(true);
     setError(null);
     try {
       const params = Object.entries(filters)
-        .filter(([k, v]) => v && v !== "")
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .filter(([_, v]) => v && v !== "")
+        .map(
+          ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`
+        )
         .join("&");
-      const url = `${API_BASE}/api/pharmacy/prescriptions${params ? "?" + params : ""}`;
+      const url = `${API_BASE}/api/pharmacy/prescriptions${
+        params ? "?" + params : ""
+      }`;
       const res = await fetch(url);
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch prescriptions");
+      if (!res.ok)
+        throw new Error(
+          data?.message || data?.error || "Failed to fetch prescriptions"
+        );
       setPrescriptions(Array.isArray(data.prescriptions) ? data.prescriptions : []);
-      setPagination(data.pagination || { page: 1, limit: 10, total_count: 0, total_pages: 1 });
+      setPagination(
+        data.pagination || {
+          page: 1,
+          limit: 10,
+          total_count: 0,
+          total_pages: 1,
+        }
+      );
     } catch (e) {
       setError(e.message || "Network error");
       setPrescriptions([]);
-      setPagination({ page: 1, limit: 10, total_count: 0, total_pages: 1 });
+      setPagination({
+        page: 1,
+        limit: 10,
+        total_count: 0,
+        total_pages: 1,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchPrescriptions(); }, [filters]);
+  useEffect(() => {
+    fetchPrescriptions();
+  }, [filters]);
 
-  const gotoPage = (p) => setFilters((f) => ({ ...f, page: p }));
+  const gotoPage = (p) =>
+    setFilters((f) => ({
+      ...f,
+      page: p,
+    }));
 
-  // Bill Form helpers
+  // Bill helpers
   const handleOpenBillForm = (presc) => {
     setShowBillForm(true);
     setBillResponse(null);
@@ -78,11 +116,14 @@ const PrescriptionsPage = () => {
         i === idx
           ? {
               ...item,
-              [field]: field === "quantity" || field === "rate" ? Number(value) : value,
+              [field]:
+                field === "quantity" || field === "rate"
+                  ? Number(value)
+                  : value,
               amount:
                 field === "quantity" || field === "rate"
-                  ? ((field === "quantity" ? Number(value) : item.quantity) *
-                      (field === "rate" ? Number(value) : item.rate))
+                  ? (field === "quantity" ? Number(value) : item.quantity) *
+                    (field === "rate" ? Number(value) : item.rate)
                   : item.quantity * item.rate,
             }
           : item
@@ -91,10 +132,12 @@ const PrescriptionsPage = () => {
   };
 
   useEffect(() => {
-    setTotalAmount(billInputs.reduce((sum, item) => sum + (item.amount || 0), 0));
+    setTotalAmount(
+      billInputs.reduce((sum, item) => sum + (item.amount || 0), 0)
+    );
   }, [billInputs]);
 
-  // Send Prescription PDF API
+  // Send prescription PDF
   const handleSendPrescription = async () => {
     if (!viewPrescription?.id) return;
     setSendLoading(true);
@@ -102,7 +145,8 @@ const PrescriptionsPage = () => {
       const url = `${API_BASE}/api/pharmacy/prescriptions/${viewPrescription.id}/send_pdf`;
       const res = await fetch(url, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || data?.message || "Failed to send PDF");
+      if (!res.ok)
+        throw new Error(data?.error || data?.message || "Failed to send PDF");
       alert(data.message || "Prescription PDF sent to patient's email.");
     } catch (e) {
       alert("Failed to send prescription PDF: " + e.message);
@@ -111,7 +155,7 @@ const PrescriptionsPage = () => {
     }
   };
 
-  // Bill API Payload Builder
+  // Build bill payload
   function buildBillDataFromInputs(presc, billInputs, totalAmount) {
     return {
       receipt_no: "AUTO-GEN",
@@ -129,33 +173,39 @@ const PrescriptionsPage = () => {
       amount_paid: Number(totalAmount),
       balance_amount: 0,
       amount_in_words: "",
-      items: billInputs.map(b => ({
+      items: billInputs.map((b) => ({
         code: b.code,
         particular: b.particular,
         rate: Number(b.rate),
         unit: Number(b.quantity),
         amount: Number(b.amount),
-      }))
+      })),
     };
   }
 
-  // Correct Bill Submit Handler for API, now with blockchain UI state
+  // Submit bill
   const handleBillSubmit = async () => {
     if (!viewPrescription?.id) return;
     setSendBillLoading(true);
     setBillResponse(null);
     try {
-      const billData = buildBillDataFromInputs(viewPrescription, billInputs, totalAmount);
+      const billData = buildBillDataFromInputs(
+        viewPrescription,
+        billInputs,
+        totalAmount
+      );
       const url = `${API_BASE}/api/pharmacy/prescriptions/${viewPrescription.id}/send_pdf_bill`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(billData)
+        body: JSON.stringify(billData),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || data?.message || "Failed to send PDF/bill");
-      setBillResponse(data); // set blockchain etc
-      // Optionally close modal: setShowBillForm(false);
+      if (!res.ok)
+        throw new Error(
+          data?.error || data?.message || "Failed to send PDF/bill"
+        );
+      setBillResponse(data);
     } catch (e) {
       setBillResponse({ error: e.message });
     } finally {
@@ -164,191 +214,423 @@ const PrescriptionsPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-blue-50 flex flex-col">
-      <PharmacyHeader />
-      <main className="flex-grow p-8">
-        <h1 className="text-3xl font-bold mb-6 text-blue-800">Prescription List</h1>
-        {loading && <div className="p-4 text-blue-700 text-center font-semibold">Loading prescriptions...</div>}
-        {error && <div className="p-4 text-red-600 text-center font-semibold">{error}</div>}
-        <div className="overflow-x-auto shadow-lg rounded-lg bg-white mb-8">
-          <table className="min-w-full table-auto border-collapse border border-gray-200 text-gray-800">
-            <thead className="bg-blue-100">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 text-left">SL</th>
-                <th className="border border-gray-300 px-4 py-2">Patient</th>
-                <th className="border border-gray-300 px-4 py-2">Doctor</th>
-                <th className="border border-gray-300 px-4 py-2">Disease</th>
-                <th className="border border-gray-300 px-4 py-2">Date</th>
-                <th className="border border-gray-300 px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {prescriptions.map((p, idx) => (
-                <tr key={p.id || idx} className="bg-white">
-                  <td className="border px-4 py-2">{((pagination.page || 1) - 1) * (filters.limit || 10) + idx + 1}</td>
-                  <td className="border px-4 py-2">{p.patient_name || "(Unknown)"}</td>
-                  <td className="border px-4 py-2">{p.doctor_name || "-"}</td>
-                  <td className="border px-4 py-2">{p.disease || "-"}</td>
-                  <td className="border px-4 py-2">{p.prescription_date || "-"}</td>
-                  <td className="border px-4 py-2 flex gap-2">
-                    <button className="bg-gradient-to-r from-blue-600 to-sky-400 text-white px-3 py-1 rounded"
-                      onClick={() => setViewPrescription(p)}
-                      type="button">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {prescriptions.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">
-                    No prescriptions found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        {pagination && pagination.total_pages > 1 && (
-          <div className="mt-2 flex gap-2">
-            <button disabled={filters.page === 1} onClick={() => gotoPage(filters.page - 1)} className="px-2">
-              &lt;
-            </button>
-            {[...Array(pagination.total_pages).keys()].map((i) => (
-              <button
-                key={i + 1}
-                onClick={() => gotoPage(i + 1)}
-                className={`px-3 py-1 rounded ${filters.page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              disabled={filters.page === pagination.total_pages}
-              onClick={() => gotoPage(filters.page + 1)}
-              className="px-2"
-            >
-              &gt;
-            </button>
+    <div className="min-h-screen w-screen bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 text-slate-900">
+      {/* background blobs */}
+      <div className="pointer-events-none fixed inset-0 opacity-60 mix-blend-multiply">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-200 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
+      </div>
+
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <PharmacyHeader />
+      </div>
+
+      <main className="relative z-10 pt-24 pb-10 px-3 md:px-8 flex justify-center">
+        <div className="w-full max-w-6xl rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-[0_16px_50px_rgba(15,23,42,0.10)] p-6 md:p-8">
+          {/* Header row */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-sky-600">
+                Digital prescriptions
+              </p>
+              <h1 className="mt-1 text-2xl md:text-3xl font-semibold text-slate-900">
+                Prescription List
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">
+                View, send, and bill blockchain-backed prescriptions directly from MedSync.
+              </p>
+            </div>
+            <div className="text-xs text-slate-500">
+              Page {pagination.page} of {pagination.total_pages} ·{" "}
+              {pagination.total_count} records
+            </div>
           </div>
-        )}
-        {viewPrescription && (
-          <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-            <div className="bg-white max-w-2xl w-full rounded-xl shadow-2xl p-6 relative text-black">
-              <button className="absolute right-2 top-2 text-3xl !text-red-500 !bg-white" onClick={() => {setViewPrescription(null); setShowBillForm(false);}}>×</button>
-              <h2 className="text-2xl font-bold mb-3">Prescription Detail</h2>
-              <div className="mb-2"><b>Patient:</b> {viewPrescription.patient_name} ({viewPrescription.patient_gender}, {viewPrescription.patient_age})</div>
-              <div className="mb-2"><b>Doctor:</b> {viewPrescription.doctor_name} ({viewPrescription.doctor_code})</div>
-              <div className="mb-2"><b>Disease:</b> {viewPrescription.disease}</div>
-              <div className="mb-2"><b>Date:</b> {viewPrescription.prescription_date} {viewPrescription.prescription_time}</div>
-              <div className="mb-2"><b>Medicines:</b>
-                <ul className="ml-6 list-decimal">
-                  {Array.isArray(viewPrescription.medicines) &&
-                    viewPrescription.medicines.map((m, i) =>
-                      <li key={i}>{m.medication} — {m.dosage}, {m.frequency}</li>
+
+          {/* Content state */}
+          {loading && (
+            <div className="py-6 text-center text-sm text-slate-500">
+              Loading prescriptions...
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
+
+          {/* Table */}
+          {!loading && !error && (
+            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/80 mb-5">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-100/80">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        SL
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        Patient
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        Doctor
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        Disease
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-[0.16em]">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {prescriptions.map((p, idx) => (
+                      <tr
+                        key={p.id || idx}
+                        className="hover:bg-white transition-colors"
+                      >
+                        <td className="px-4 py-3 text-slate-700">
+                          {((pagination.page || 1) - 1) *
+                            (filters.limit || 10) +
+                            idx +
+                            1}
+                        </td>
+                        <td className="px-4 py-3 text-slate-900">
+                          <div className="font-medium">
+                            {p.patient_name || "(Unknown)"}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {p.patient_email || ""}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-900">
+                          <div className="font-medium">
+                            {p.doctor_name || "-"}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {p.doctor_code || ""}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-800">
+                          {p.disease || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-slate-800">
+                          <span className="inline-flex items-center rounded-full bg-slate-50 border border-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+                            {p.prescription_date || "-"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-800">
+                          <button
+                            className="inline-flex items-center rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 text-white px-3 py-1.5 text-xs font-medium shadow-sm hover:brightness-110"
+                            onClick={() => {
+                              setViewPrescription(p);
+                              setShowBillForm(false);
+                              setBillResponse(null);
+                            }}
+                            type="button"
+                          >
+                            View details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {prescriptions.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="py-6 text-center text-sm text-slate-500"
+                        >
+                          No prescriptions found.
+                        </td>
+                      </tr>
                     )}
-                </ul>
+                  </tbody>
+                </table>
               </div>
-              <div className="mt-4 flex gap-4">
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.total_pages > 1 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <button
+                disabled={filters.page === 1}
+                onClick={() => gotoPage(filters.page - 1)}
+                className={`px-2 py-1 rounded border ${
+                  filters.page === 1
+                    ? "border-slate-100 text-slate-300 cursor-not-allowed"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                &lt;
+              </button>
+              {[...Array(pagination.total_pages).keys()].map((i) => (
                 <button
-                  className="bg-gradient-to-r from-green-600 via-teal-500 to-blue-500 text-white px-4 py-2 rounded"
-                  onClick={handleSendPrescription}
-                  disabled={sendLoading}
+                  key={i + 1}
+                  onClick={() => gotoPage(i + 1)}
+                  className={`px-3 py-1 rounded text-xs font-medium ${
+                    filters.page === i + 1
+                      ? "bg-sky-500 text-white"
+                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
                 >
-                  {sendLoading ? "Sending..." : "Send Prescription"}
+                  {i + 1}
                 </button>
-                <button
-                  className="bg-gradient-to-r from-indigo-700 to-emerald-500 text-white px-4 py-2 rounded"
-                  onClick={() => handleOpenBillForm(viewPrescription)}
-                >
+              ))}
+              <button
+                disabled={filters.page === pagination.total_pages}
+                onClick={() => gotoPage(filters.page + 1)}
+                className={`px-2 py-1 rounded border ${
+                  filters.page === pagination.total_pages
+                    ? "border-slate-100 text-slate-300 cursor-not-allowed"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                &gt;
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <PharmacyFooter />
+
+      {/* Modal */}
+      {viewPrescription && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-3">
+          <div className="relative w-full max-w-3xl rounded-3xl bg-white shadow-2xl border border-white/70 p-6 md:p-7 text-slate-900">
+            <button
+              className="absolute right-3 top-2 text-2xl text-slate-400 hover:text-rose-500"
+              onClick={() => {
+                setViewPrescription(null);
+                setShowBillForm(false);
+                setBillResponse(null);
+              }}
+            >
+              ×
+            </button>
+
+            <h2 className="text-xl md:text-2xl font-semibold mb-4">
+              Prescription Details
+            </h2>
+
+            {/* Patient & doctor info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-[0.16em] mb-1">
+                  Patient
+                </h3>
+                <p className="font-medium text-slate-900">
+                  {viewPrescription.patient_name}{" "}
+                  <span className="text-xs text-slate-500">
+                    ({viewPrescription.patient_gender},{" "}
+                    {viewPrescription.patient_age})
+                  </span>
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {viewPrescription.patient_email}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-[0.16em] mb-1">
+                  Doctor
+                </h3>
+                <p className="font-medium text-slate-900">
+                  {viewPrescription.doctor_name}{" "}
+                  <span className="text-xs text-slate-500">
+                    ({viewPrescription.doctor_code})
+                  </span>
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {viewPrescription.doctor_department}
+                </p>
+              </div>
+            </div>
+
+            <div className="text-sm mb-3">
+              <div className="mb-1">
+                <span className="font-semibold">Disease: </span>
+                <span className="text-slate-800">
+                  {viewPrescription.disease}
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold">Date: </span>
+                <span className="text-slate-800">
+                  {viewPrescription.prescription_date}{" "}
+                  {viewPrescription.prescription_time}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-3 mb-4">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-[0.16em] mb-2">
+                Medicines
+              </h3>
+              <ul className="ml-5 list-decimal text-sm space-y-1">
+                {Array.isArray(viewPrescription.medicines) &&
+                  viewPrescription.medicines.map((m, i) => (
+                    <li key={i}>
+                      <span className="font-medium text-slate-900">
+                        {m.medication}
+                      </span>{" "}
+                      <span className="text-slate-600">
+                        — {m.dosage}, {m.frequency}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 text-white px-4 py-2 text-xs font-semibold shadow-sm hover:brightness-110"
+                onClick={handleSendPrescription}
+                disabled={sendLoading}
+              >
+                {sendLoading ? "Sending..." : "Send Prescription"}
+              </button>
+              <button
+                className="inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-sm hover:brightness-110"
+                onClick={() => handleOpenBillForm(viewPrescription)}
+              >
+                Generate Bill
+              </button>
+            </div>
+
+            {/* Bill form */}
+            {showBillForm && (
+              <div className="mt-6 rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">
                   Generate Bill
-                </button>
-              </div>
-              {showBillForm && (
-                <div className="mt-8 p-4 border rounded-xl bg-slate-50">
-                  <h3 className="text-lg font-bold mb-2 text-green-700">Generate Bill</h3>
-                  <form onSubmit={e => { e.preventDefault(); handleBillSubmit(); }}>
-                    <table className="min-w-full mb-3">
+                </h3>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleBillSubmit();
+                  }}
+                  className="space-y-3 text-xs md:text-sm"
+                >
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-xs">
                       <thead>
-                        <tr>
-                          <th className="px-2 text-left">S. No.</th>
-                          <th className="px-2 text-left">Item</th>
-                          <th className="px-2 text-left">Quantity</th>
-                          <th className="px-2 text-left">Rate</th>
-                          <th className="px-2 text-left">Amount</th>
+                        <tr className="text-slate-500">
+                          <th className="px-2 py-1 text-left">S. No.</th>
+                          <th className="px-2 py-1 text-left">Item</th>
+                          <th className="px-2 py-1 text-left">Qty</th>
+                          <th className="px-2 py-1 text-left">Rate</th>
+                          <th className="px-2 py-1 text-left">Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {billInputs.map((item, i) => (
                           <tr key={i}>
-                            <td className="px-2">{item.sNo}</td>
-                            <td className="px-2">{item.particular}</td>
-                            <td className="px-2">
-                              <input type="number" min="1" value={item.quantity}
-                                onChange={e => handleBillItemChange(i, "quantity", e.target.value)}
-                                className="border rounded px-2 py-1 w-16" />
+                            <td className="px-2 py-1">{item.sNo}</td>
+                            <td className="px-2 py-1">{item.particular}</td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleBillItemChange(
+                                    i,
+                                    "quantity",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-14 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                              />
                             </td>
-                            <td className="px-2">
-                              <input type="number" min="0" value={item.rate}
-                                onChange={e => handleBillItemChange(i, "rate", e.target.value)}
-                                className="border rounded px-2 py-1 w-20" />
+                            <td className="px-2 py-1">
+                              <input
+                                type="number"
+                                min="0"
+                                value={item.rate}
+                                onChange={(e) =>
+                                  handleBillItemChange(
+                                    i,
+                                    "rate",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                              />
                             </td>
-                            <td className="px-2">{item.amount}</td>
+                            <td className="px-2 py-1 text-slate-800">
+                              ₹{item.amount}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <div className="flex justify-end font-bold">
-                      Total Amount: <span className="ml-2 text-blue-900">₹{totalAmount}</span>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-gradient-to-r from-teal-600 via-sky-500 to-blue-700 rounded text-white"
-                        disabled={sendBillLoading}
-                      >
-                        {sendBillLoading ? "Sending Bill..." : "Send Bill + Prescription PDF"}
-                      </button>
-                      <button
-                        type="button"
-                        className="px-4 py-2 rounded border text-white bg-gradient-to-r from-red-500 via-pink-500 to-yellow-400"
-                        onClick={() => setShowBillForm(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                  {/* Blockchain Evidence/Message */}
-                  {billResponse && (
-                    <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-                      {billResponse.error && (
-                        <div className="text-red-600 font-medium">{billResponse.error}</div>
-                      )}
-                      {billResponse.message && (
-                        <div>
-                          <div className="font-bold mb-1">{billResponse.message}</div>
-                          {billResponse.blockchain && (
-                            <div className="mt-2 p-2 rounded bg-gray-50 border border-blue-100 text-xs">
-                              <div className="font-semibold text-blue-800">Blockchain Evidence</div>
-                              <div>
-                                Record Hash: <code className="break-all">{billResponse.blockchain.hash}</code>
-                              </div>
-                              <div>
-                                Tx ID: <code className="break-all">{billResponse.blockchain.tx}</code>
-                              </div>
-                            </div>
-                          )}
+                  </div>
+
+                  <div className="flex justify-end text-sm font-semibold mt-2">
+                    Total:{" "}
+                    <span className="ml-2 text-sky-700">₹{totalAmount}</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-600 via-sky-500 to-blue-700 text-white text-xs font-semibold shadow-sm hover:brightness-110"
+                      disabled={sendBillLoading}
+                    >
+                      {sendBillLoading
+                        ? "Sending Bill..."
+                        : "Send Bill + PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      onClick={() => setShowBillForm(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+
+                {/* Blockchain / API response */}
+                {billResponse && (
+                  <div className="mt-4 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs text-slate-800">
+                    {billResponse.error && (
+                      <div className="text-rose-600 font-medium mb-1">
+                        {billResponse.error}
+                      </div>
+                    )}
+                    {billResponse.message && (
+                      <>
+                        <div className="font-semibold mb-1">
+                          {billResponse.message}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                        {billResponse.blockchain && (
+                          <div className="mt-2 rounded-lg bg-white/80 border border-slate-100 p-2">
+                            <div className="font-semibold text-slate-800 mb-1">
+                              Blockchain Evidence
+                            </div>
+                            <div className="break-all">
+                              <span className="font-medium">Hash: </span>
+                              <code>{billResponse.blockchain.hash}</code>
+                            </div>
+                            <div className="break-all">
+                              <span className="font-medium">Tx ID: </span>
+                              <code>{billResponse.blockchain.tx}</code>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </main>
-      <PharmacyFooter />
+        </div>
+      )}
     </div>
   );
 };
