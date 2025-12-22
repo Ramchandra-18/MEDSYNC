@@ -88,6 +88,26 @@ const DoctorDashboardContent = () => {
 
   const [animateIn, setAnimateIn] = useState(false);
 
+  // toast state
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+  });
+
+  const showComingSoon = () => {
+    setToast({
+      visible: true,
+      message: "This feature is coming soon.!!!!",
+    });
+
+    setTimeout(() => {
+      setToast({
+        visible: false,
+        message: "",
+      });
+    }, 2500);
+  };
+
   useEffect(() => {
     const t = setTimeout(() => setAnimateIn(true), 200);
     return () => clearTimeout(t);
@@ -136,9 +156,7 @@ const DoctorDashboardContent = () => {
               <FaUserMd />
             </div>
             <div className="text-xs text-slate-600">
-              <p className="font-semibold text-slate-900">
-                Today at a glance
-              </p>
+              <p className="font-semibold text-slate-900">Today at a glance</p>
               <p>27 in queue · 9 upcoming · 4 critical alerts</p>
             </div>
           </div>
@@ -183,6 +201,7 @@ const DoctorDashboardContent = () => {
               <button
                 key={card.label}
                 type="button"
+                onClick={showComingSoon}
                 className={`group rounded-2xl bg-gradient-to-br ${card.color} border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-700 flex flex-col items-stretch text-left ${
                   animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
                 }`}
@@ -220,6 +239,15 @@ const DoctorDashboardContent = () => {
           </p>
         </section>
       </main>
+
+      {/* Toast - top-right modern glassmorph */}
+      {toast.visible && (
+        <div className="fixed top-20 right-5 z-50">
+          <div className="rounded-2xl bg-green-100 text-slate-900 px-4 py-2 text-sm">
+            {toast.message}
+          </div>
+        </div>
+      )}
 
       <DoctorFooter />
     </div>

@@ -1256,7 +1256,7 @@ def generate_bill_and_prescription_pdf(prescription, bill):
     )
     c.setFont("Helvetica-Bold", 13)
     c.setFillColorRGB(0, 0, 0)
-    c.drawCentredString(width / 2, height - 120, "Investigation Payment Receipt")
+    c.drawCentredString(width / 2, height - 120, "Hospital billing receipt")
 
     left_labels = [
         ("Receipt No", bill.get("receipt_no", "")),
@@ -1336,7 +1336,7 @@ def generate_bill_and_prescription_pdf(prescription, bill):
         50,
         bill.get(
             "hospital_address",
-            "Address: IT Tower, H-91, Sector-63, Noida-201301 Uttar Pradesh",
+            "VTU CPGS KALABURAGI | Phone: 8088237366 | Email:work.medsync@gmail.com",
         ),
     )
     c.showPage()
@@ -1504,3 +1504,5 @@ def send_prescription_bill_pdf_email_route(prescription_id):
     except Exception as e:
         print(f"Exception during PDF+bill email send: {e}")
         return {"error": f"Failed to process: {str(e)}"}, 500
+
+

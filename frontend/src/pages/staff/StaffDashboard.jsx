@@ -77,6 +77,26 @@ const StaffDashboardMain = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
+  // toast state
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+  });
+
+  const showComingSoon = () => {
+    setToast({
+      visible: true,
+      message: "This feature is coming soon!!!!!.",
+    });
+
+    setTimeout(() => {
+      setToast({
+        visible: false,
+        message: "",
+      });
+    }, 2500);
+  };
+
   useEffect(() => {
     const t = setTimeout(() => setAnimateIn(true), 200);
     return () => clearTimeout(t);
@@ -86,7 +106,6 @@ const StaffDashboardMain = () => {
     setShowBookingForm((prev) => !prev);
   };
 
-  // UPDATED: navigate to patient appointments with prefill
   const handleStaffBook = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -177,6 +196,7 @@ const StaffDashboardMain = () => {
                   <button
                     key={card.label}
                     type="button"
+                    onClick={showComingSoon}
                     className={`group rounded-2xl bg-gradient-to-br ${card.color} border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-700 flex flex-col items-stretch text-left ${
                       animateIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
                     }`}
@@ -217,58 +237,23 @@ const StaffDashboardMain = () => {
             </div>
           </section>
 
-          {/* Booking form inline
-          {showBookingForm && (
+          {/* Booking form (still commented as in your code) */}
+          {/* {showBookingForm && (
             <section className="mt-4 rounded-2xl bg-white border border-slate-100 shadow-sm p-5 max-w-lg mx-auto">
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-4">
-                Book new appointment
-              </h3>
-              <form
-                onSubmit={handleStaffBook}
-                className="flex flex-col gap-4 text-sm"
-              >
-                <input
-                  type="text"
-                  name="fullName"
-                  required
-                  placeholder="Patient name"
-                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                />
-                <input
-                  type="date"
-                  name="date"
-                  required
-                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                />
-                <select
-                  name="doctorName"
-                  required
-                  className="border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                >
-                  <option value="">Select doctor</option>
-                  <option value="Dr. Smith">Dr. Smith</option>
-                  <option value="Dr. Patel">Dr. Patel</option>
-                </select>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={toggleBookingForm}
-                    className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 rounded-lg bg-gradient-to-r from-sky-600 to-emerald-600 text-white text-xs font-semibold shadow-sm hover:brightness-110"
-                  >
-                    Continue to patient booking
-                  </button>
-                </div>
-              </form>
-            </section> */}
-          {/* )} */}
+              ...
+            </section>
+          )} */}
         </div>
       </main>
+
+      {/* Toast - top-right glassmorph */}
+      {toast.visible && (
+        <div className="fixed top-20 right-5 z-50">
+          <div className="rounded-2xl bg-green-100 text-slate-900 px-4 py-2 text-sm">
+            {toast.message}
+          </div>
+        </div>
+      )}
 
       <StaffFooter />
     </div>

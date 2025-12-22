@@ -8,17 +8,20 @@ const genders = ["Male", "Female", "Other"];
 
 const Appointments = () => {
   const location = useLocation();
-  const initialDoctor = location.state?.doctor || {};
-
-  const [showForm, setShowForm] = useState(Boolean(initialDoctor.name));
+  
+  // ✅ TRIPLE PREFILL SYSTEM - ONLY FROM DOCTORS PAGE
+  const [prefilledDoctor, setPrefilledDoctor] = useState(null);
+  
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     age: "",
     phone: "",
     gender: "",
     symptoms: "",
-    department: initialDoctor.department || "",
-    doctorName: initialDoctor.name || "",
+    department: "",
+    doctorName: "",
+    doctorId: "",
     date: "",
     time: "",
   });
@@ -31,9 +34,78 @@ const Appointments = () => {
 
   const API_BASE = import.meta.env.VITE_API_BASE || "http://192.168.1.15:5000";
 
+  // ✅ PERFECT PREFILL - ONLY FROM DOCTORS PAGE
   useEffect(() => {
-    if (initialDoctor.name) setShowForm(true);
-  }, [initialDoctor]);
+    const prefillDoctorData = () => {
+      // Method 1: Navigation state (immediate) - CHECK FLAG FIRST
+      if (location.state?.fromDoctorsPage && location.state?.prefilledDoctor) {
+        const doctor = location.state.prefilledDoctor;
+        console.log("✅ Prefill from navigation (DOCTORS PAGE):", doctor.name);
+        setPrefilledDoctor(doctor);
+        setForm(prev => ({
+          ...prev,
+          department: doctor.department || "",
+          doctorName: doctor.name || doctor.full_name || "",
+          doctorId: doctor.id || ""
+        }));
+        setShowForm(true);
+        return;
+      }
+
+      // Method 2: localStorage - CHECK FLAG FIRST
+      try {
+        const stored = localStorage.getItem("selectedDoctor");
+        if (stored) {
+          const doctor = JSON.parse(stored);
+          // ✅ ONLY PREFILL IF fromDoctorsPage flag exists
+          if (doctor.fromDoctorsPage) {
+            console.log("✅ Prefill from localStorage (DOCTORS PAGE):", doctor.name);
+            setPrefilledDoctor(doctor);
+            setForm(prev => ({
+              ...prev,
+              department: doctor.department || "",
+              doctorName: doctor.name || doctor.full_name || "",
+              doctorId: doctor.id || ""
+            }));
+            setShowForm(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("localStorage parse error:", e);
+      }
+
+      // Method 3: sessionStorage - CHECK FLAG FIRST
+      try {
+        const sessionStored = sessionStorage.getItem("selectedDoctor");
+        if (sessionStored) {
+          const doctor = JSON.parse(sessionStored);
+          // ✅ ONLY PREFILL IF fromDoctorsPage flag exists
+          if (doctor.fromDoctorsPage) {
+            console.log("✅ Prefill from sessionStorage (DOCTORS PAGE):", doctor.name);
+            setPrefilledDoctor(doctor);
+            setForm(prev => ({
+              ...prev,
+              department: doctor.department || "",
+              doctorName: doctor.name || doctor.full_name || "",
+              doctorId: doctor.id || ""
+            }));
+            setShowForm(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("sessionStorage parse error:", e);
+      }
+
+      // 🆕 FRESH PAGE - No prefill
+      console.log("🆕 Fresh appointments page - NO prefill");
+      setPrefilledDoctor(null);
+      setShowForm(false); // Don't auto-show form
+    };
+
+    prefillDoctorData();
+  }, [location.state]);
 
   useEffect(() => {
     const fetchRecent = async () => {
@@ -119,9 +191,15 @@ const Appointments = () => {
             symptoms: "",
             department: "",
             doctorName: "",
+            doctorId: "",
             date: "",
             time: "",
           });
+          
+          // ✅ CLEAR ALL PREFILL DATA AFTER SUCCESS
+          setPrefilledDoctor(null);
+          localStorage.removeItem("selectedDoctor");
+          sessionStorage.removeItem("selectedDoctor");
 
           try {
             setLoadingRecent(true);
@@ -165,6 +243,7 @@ const Appointments = () => {
         <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-emerald-200 blur-3xl" />
       </div>
 
+      {/* ✅ CORRECTED HEADER */}
       <div className="fixed top-0 left-0 right-0 z-40">
         <PatientHeader />
       </div>
@@ -181,10 +260,14 @@ const Appointments = () => {
                 Book an appointment
               </h1>
               <p className="mt-1 text-sm text-slate-600 max-w-xl">
-                Choose your department, doctor, and time slot. Your appointments are securely stored in your MedSync record.
+                {prefilledDoctor ? (
+                  `Continuing with Dr. ${prefilledDoctor.name || prefilledDoctor.full_name} (${prefilledDoctor.department})`
+                ) : (
+                  "Choose your department, doctor, and time slot. Your appointments are securely stored in your MedSync record."
+                )}
               </p>
             </div>
-            {!showForm && (
+            {!showForm && !prefilledDoctor && (
               <button
                 onClick={() => setShowForm(true)}
                 className="self-start md:self-auto bg-gradient-to-r from-sky-500 to-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:brightness-110 transition"
@@ -193,6 +276,28 @@ const Appointments = () => {
               </button>
             )}
           </div>
+
+          {/* ✅ PREFILLED DOCTOR INFO - ONLY SHOWS FROM DOCTORS PAGE */}
+          {prefilledDoctor && (
+            <div className="mb-6 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl animate-pulse">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  {prefilledDoctor.name?.charAt(0) || prefilledDoctor.full_name?.charAt(0) || "D"}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-emerald-800">
+                    👨‍⚕️ {prefilledDoctor.name || prefilledDoctor.full_name}
+                  </h3>
+                  <p className="text-sm text-emerald-700 uppercase tracking-wide font-medium">
+                    {prefilledDoctor.department}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-emerald-600 flex items-center gap-2">
+                ✅ Prefilled from Doctors page • Fee: ₹{prefilledDoctor.fee || 500}
+              </p>
+            </div>
+          )}
 
           {/* Feedback */}
           {error && (
@@ -252,7 +357,7 @@ const Appointments = () => {
             </section>
 
             {/* Booking form */}
-            {showForm && (
+            {(showForm || prefilledDoctor) && (
               <section className="rounded-2xl bg-white border border-slate-100 p-4 sm:p-5 shadow-sm">
                 <h2 className="text-sm font-semibold text-slate-900 mb-3">
                   Appointment details
@@ -292,12 +397,14 @@ const Appointments = () => {
                         type: "select",
                         options: departments,
                         placeholder: "Select Department",
+                        readOnly: !!prefilledDoctor,
                       },
                       {
                         id: "doctorName",
                         label: "Doctor Name",
                         type: "text",
                         placeholder: "Enter doctor's name",
+                        readOnly: !!prefilledDoctor,
                       },
                       {
                         id: "symptoms",
@@ -307,7 +414,7 @@ const Appointments = () => {
                       },
                       { id: "date", label: "Date", type: "date" },
                       { id: "time", label: "Time", type: "time" },
-                    ].map(({ id, label, type, placeholder, options, min }) =>
+                    ].map(({ id, label, type, placeholder, options, min, readOnly = false }) =>
                       type === "select" ? (
                         <div key={id}>
                           <label
@@ -315,14 +422,22 @@ const Appointments = () => {
                             className="block mb-1 font-medium text-slate-800 text-xs"
                           >
                             {label}
+                            {readOnly && (
+                              <span className="ml-1 text-emerald-600 text-[10px] font-medium">(Prefilled)</span>
+                            )}
                           </label>
                           <select
                             id={id}
                             name={id}
                             value={form[id]}
-                            onChange={handleChange}
+                            onChange={readOnly ? undefined : handleChange}
                             required
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            disabled={readOnly}
+                            className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                              readOnly
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-medium cursor-not-allowed"
+                                : "border-slate-200 focus:ring-sky-400"
+                            }`}
                           >
                             <option value="">{placeholder}</option>
                             {options.map((opt) => (
@@ -339,6 +454,9 @@ const Appointments = () => {
                             className="block mb-1 font-medium text-slate-800 text-xs"
                           >
                             {label}
+                            {readOnly && (
+                              <span className="ml-1 text-emerald-600 text-[10px] font-medium">(Prefilled)</span>
+                            )}
                           </label>
                           <input
                             id={id}
@@ -347,9 +465,14 @@ const Appointments = () => {
                             min={min}
                             placeholder={placeholder}
                             value={form[id]}
-                            onChange={handleChange}
+                            onChange={readOnly ? undefined : handleChange}
                             required={id !== "symptoms"}
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            readOnly={readOnly}
+                            className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                              readOnly
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-medium cursor-not-allowed"
+                                : "border-slate-200 focus:ring-sky-400"
+                            }`}
                           />
                         </div>
                       )
@@ -359,8 +482,23 @@ const Appointments = () => {
                   <div className="flex items-center justify-end gap-3 pt-2">
                     <button
                       type="button"
-                      onClick={() => setShowForm(false)}
-                      className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      onClick={() => {
+                        setShowForm(false);
+                        setPrefilledDoctor(null);
+                        setForm({
+                          fullName: "",
+                          age: "",
+                          phone: "",
+                          gender: "",
+                          symptoms: "",
+                          department: "",
+                          doctorName: "",
+                          doctorId: "",
+                          date: "",
+                          time: "",
+                        });
+                      }}
+                      className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 !bg- transparent transition"
                     >
                       Cancel
                     </button>
@@ -379,6 +517,7 @@ const Appointments = () => {
         </div>
       </main>
 
+      {/* ✅ CORRECTED FOOTER */}
       <PatientFooter />
     </div>
   );

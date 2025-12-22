@@ -17,6 +17,26 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
   const [animateIn, setAnimateIn] = useState(false);
 
+  // toast state
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+  });
+
+  const showComingSoon = () => {
+    setToast({
+      visible: true,
+      message: "This feature is coming soon.!!!!",
+    });
+
+    setTimeout(() => {
+      setToast({
+        visible: false,
+        message: "",
+      });
+    }, 2500);
+  };
+
   const user =
     JSON.parse(localStorage.getItem("user")) ||
     JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -28,10 +48,7 @@ const PatientDashboard = () => {
   // In real app, fetch these
   const wellnessScore = 82; // /100
   const nextAppointment = {
-    time: "Thu, 19 Dec · 10:30 AM",
-    dept: "Cardiology",
-    doctor: "Dr. Arjun Rao",
-  };
+    };
 
   useEffect(() => {
     const t = setTimeout(() => setAnimateIn(true), 180);
@@ -69,8 +86,9 @@ const PatientDashboard = () => {
                 </span>
               </h1>
               <p className="text-sm sm:text-base text-slate-600 max-w-xl">
-                This is your personal dashboard. See your upcoming visit, current
-                prescriptions, and simple guidance to stay on top of your health.
+                This is your personal dashboard. See your upcoming visit,
+                current prescriptions, and simple guidance to stay on top of
+                your health.
               </p>
             </div>
 
@@ -121,7 +139,7 @@ const PatientDashboard = () => {
               <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate("/patient/appointments")}
+                  onClick={showComingSoon}
                   className="rounded-2xl bg-sky-50 border border-sky-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
                 >
                   <div className="flex items-center gap-2 text-sky-700">
@@ -134,7 +152,7 @@ const PatientDashboard = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/patient/prescriptions")}
+                  onClick={showComingSoon}
                   className="rounded-2xl bg-emerald-50 border border-emerald-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
                 >
                   <div className="flex items-center gap-2 text-emerald-700">
@@ -147,7 +165,7 @@ const PatientDashboard = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/patient/records")}
+                  onClick={showComingSoon}
                   className="rounded-2xl bg-slate-50 border border-slate-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
                 >
                   <div className="flex items-center gap-2 text-slate-800">
@@ -160,7 +178,7 @@ const PatientDashboard = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/patient/notifications")}
+                  onClick={showComingSoon}
                   className="rounded-2xl bg-amber-50 border border-amber-100 px-3 py-3 text-left text-xs sm:text-sm flex flex-col gap-2 hover:-translate-y-1 hover:shadow-sm transition"
                 >
                   <div className="flex items-center gap-2 text-amber-700">
@@ -229,7 +247,7 @@ const PatientDashboard = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate("/patient/support")}
+                  onClick={() => navigate("/contact")}
                   className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition"
                 >
                   <FaMobileAlt />
@@ -253,8 +271,7 @@ const PatientDashboard = () => {
                         Morning check-in
                       </p>
                       <p className="text-slate-600">
-                        Take prescribed meds and log how you feel in your
-                        notes.
+                        Take prescribed meds and log how you feel in your notes.
                       </p>
                     </div>
                   </li>
@@ -304,6 +321,15 @@ const PatientDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Toast */}
+      {toast.visible && (
+  <div className="fixed top-20 right-5 z-50">
+    <div className="rounded-2xl bg-gradient-to-b from-red-100 to-purple-400 text-slate-900 px-4 py-2 text-sm shadow-lg border border-pink-700">
+      {toast.message}
+    </div>
+  </div>
+)}
 
       <PatientFooter />
     </div>

@@ -129,7 +129,7 @@ const Home = () => {
                 Get Started!!
               </button>
               <p className="text-xs text-slate-500 italic">
-               ( Your health, our priority. )
+                ( Your health, our priority. )
               </p>
             </motion.div>
 
@@ -156,7 +156,7 @@ const Home = () => {
             </motion.div>
           </div>
 
-          {/* Right column */}
+          {/* Right column - Hospital Image - FIXED */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -165,42 +165,18 @@ const Home = () => {
             className="relative"
           >
             <div className="absolute -inset-6 bg-sky-200/40 blur-3xl -z-10" />
-            <div className="rounded-3xl border border-sky-100 bg-white/80 backdrop-blur-xl p-6 shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-sky-600">
-                  Real-time Overview
-                </p>
-                <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600">
-                  Live dashboard
-                </span>
+            <div className="rounded-3xl border border-sky-100 bg-white/80 backdrop-blur-xl p-6 shadow-xl flex flex-col items-center justify-center h-[450px] md:h-[500px]">
+              <div className="w-full h-[380px] md:h-[430px] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-100 to-sky-100">
+                <img
+                  src="/Medsync.png"
+                  alt="Modern MedSync Hospital - State-of-the-art healthcare facility"
+                  className="w-full h-full object-cover object-center hover:scale-105 transition-all duration-500"
+                  loading="lazy"
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                <div className="rounded-2xl bg-sky-50 border border-sky-100 p-4">
-                  <p className="text-xs text-slate-500 mb-1">Bed occupancy</p>
-                  <p className="text-2xl font-semibold text-sky-600">86%</p>
-                  <p className="mt-1 text-[11px] text-emerald-600">
-                    +12% optimized in last month
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-                  <p className="text-xs text-slate-500 mb-1">Blockchain records</p>
-                  <p className="text-2xl font-semibold text-emerald-600">100%</p>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    Tamper-proof medical history
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-gradient-to-r from-sky-50 via-sky-100 to-emerald-50 border border-sky-100 p-4 text-xs">
-                <p className="text-sky-700 font-medium mb-1">
-                  One platform for patients, doctors, and staff.
-                </p>
-                <p className="text-slate-600">
-                  Manage appointments, prescriptions, billing, and insurance with
-                  transparent, auditable workflows powered by blockchain.
-                </p>
-              </div>
+              <p className="mt-4 text-xs uppercase tracking-[0.22em] text-center text-sky-600 font-medium">
+                World-Class Facility
+              </p>
             </div>
           </motion.div>
         </section>

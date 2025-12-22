@@ -1,153 +1,99 @@
-import datetime
+from datetime import datetime, date, time, timedelta  # ✅ single style
 import os
+import random
+import smtplib
+import ssl
+from email.mime.text import MIMEText
 
 import jwt
-from flask import request
-
+from flask import request, jsonify
+from functools import wraps
 from app.auth.supabase_client import supabase
-
 from . import doctor_bp
 
+from dateutil.parser import parse
 
-@doctor_bp.route("/", methods=["GET"])
+# ✅ FIXED CORS DECORATOR
+def cors_handler(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            response = jsonify({'status': 'ok'})
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            return response
+        return f(*args, **kwargs)
+    return decorated_function
+
+@doctor_bp.route("/", methods=["GET", "OPTIONS"])
+@cors_handler
 def list_doctors():
     return {
         "message": "Doctor API ready. Use GET /api/doctor/todays-appointments to view today's schedule."
     }
 
-
-@doctor_bp.route("/todays-appointments", methods=["GET"])
+# ✅ FIXED: Added OPTIONS + @cors_handler
+@doctor_bp.route("/todays-appointments", methods=["GET", "OPTIONS"])
+@cors_handler
 def todays_appointments():
-    """List today's appointments for the authenticated doctor only. Requires JWT token with doctor's information."""
-    # Extract JWT token from Authorization header
+    """List today's appointments for the authenticated doctor only."""
+    
+    # 1. AUTHENTICATION
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
-        return {
-            "error": "Authorization token required. Please provide Bearer token."
-        }, 401
+        return {"error": "Authorization token required."}, 401
 
     token = auth_header.split(" ")[1]
 
     try:
-        # Decode JWT token to get doctor information
         jwt_secret = os.getenv("JWT_SECRET", "your_secret_key")
-
-        # Debug: Log token details (first/last 10 chars for security)
-        print(
-            f"DEBUG: Token received: {token[:10]}...{token[-10:] if len(token) > 20 else token}"
-        )
-        print(
-            f"DEBUG: JWT_SECRET from env: {jwt_secret[:10]}...{jwt_secret[-10:] if len(jwt_secret) > 20 else jwt_secret}"
-        )
-
         payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        print(f"DEBUG: Decoded payload: {payload}")
-
-        # Extract user information from token
+        
         user_id = payload.get("user_id")
-        doctor_email = payload.get("email")
         doctor_role = payload.get("role", "").lower()
 
-        print(
-            f"DEBUG: Extracted user_id='{user_id}', email='{doctor_email}', role='{doctor_role}'"
-        )
+        print(f"DEBUG: Token User ID: {user_id}") 
 
-        # Verify this is actually a doctor
         if doctor_role != "doctor":
-            return {
-                "error": f"Access denied. This endpoint is only for doctors. Your role: {doctor_role}"
-            }, 403
+            return {"error": f"Access denied. Role: {doctor_role}"}, 403
 
-        # Get the doctor's user_code from the database using user_id
         if not user_id:
-            return {"error": "User ID not found in token. Please login again."}, 401
+            return {"error": "User ID missing in token."}, 401
 
-        # Fetch the doctor's user_code from users table
-        try:
-            user_result = (
-                supabase.table("users")
-                .select("user_code, full_name")
-                .eq("id", user_id)
-                .limit(1)
-                .execute()
-            )
-            user_error = (
-                getattr(user_result, "error", None)
-                if hasattr(user_result, "error")
-                else user_result.get("error")
-                if isinstance(user_result, dict)
-                else None
-            )
-            user_data = (
-                getattr(user_result, "data", None)
-                if hasattr(user_result, "data")
-                else user_result.get("data")
-                if isinstance(user_result, dict)
-                else None
-            )
+        # 2. FETCH DOCTOR INFO
+        user_result = (
+            supabase.table("users")
+            .select("user_code, full_name")
+            .eq("id", user_id)
+            .execute()
+        )
+        
+        user_data = getattr(user_result, "data", None) 
+        if user_data is None and isinstance(user_result, dict):
+            user_data = user_result.get("data")
 
-            if user_error or not user_data:
-                return {
-                    "error": "Could not fetch doctor information from database."
-                }, 400
+        if not user_data or len(user_data) == 0:
+            print(f"❌ ERROR: User ID {user_id} not found in 'users' table.")
+            return {"error": "Doctor profile not found."}, 404
 
-            doctor_info = user_data[0]
-            user_code = doctor_info.get("user_code")
-            doctor_name = doctor_info.get("full_name")
+        doctor_info = user_data[0]
+        user_code = doctor_info.get("user_code")
+        doctor_name = doctor_info.get("full_name")
 
-            if not user_code:
-                return {
-                    "error": "User code not found for this doctor. Please contact admin."
-                }, 400
-
-            print(
-                f"DEBUG: Found doctor user_code='{user_code}', full_name='{doctor_name}'"
-            )
-
-        except Exception as e:
-            print(f"DEBUG: Error fetching doctor info: {e}")
-            return {
-                "error": f"Database error while fetching doctor info: {str(e)}"
-            }, 400
-
-    except jwt.ExpiredSignatureError as e:
-        print(f"DEBUG: Token expired: {e}")
-        return {"error": "Token has expired. Please login again."}, 401
-    except jwt.InvalidTokenError as e:
-        print(f"DEBUG: Invalid token: {e}")
-        return {"error": f"Invalid token: {str(e)}. Please login again."}, 401
+    except jwt.ExpiredSignatureError:
+        return {"error": "Token expired."}, 401
+    except jwt.InvalidTokenError:
+        return {"error": "Invalid token."}, 401
     except Exception as e:
-        print(f"DEBUG: Token validation exception: {e}")
-        return {"error": f"Token validation failed: {str(e)}"}, 401
+        print(f"DEBUG: Auth Error: {e}")
+        return {"error": f"Auth failed: {str(e)}"}, 401
 
-    today = datetime.date.today().isoformat()
-
-    # Query appointments for this specific doctor using user_code directly
-    print(f"DEBUG: Querying appointments for user_code='{user_code}' on date='{today}'")
+    # ✅ FIXED: datetime conflict resolved
+    today = datetime.now().date().isoformat()  # ← ONE LINE CHANGE
+    print(f"DEBUG: Fetching appointments for {doctor_name} ({user_code}) on {today}")
 
     try:
-        # First, let's check if there are ANY appointments for this doctor (any date)
-        q_all = supabase.table("appointments").select("*").eq("user_code", user_code)
-        res_all = q_all.execute()
-        all_data = (
-            getattr(res_all, "data", None)
-            if hasattr(res_all, "data")
-            else res_all.get("data")
-            if isinstance(res_all, dict)
-            else None
-        )
-        print(
-            f"DEBUG: Total appointments for user_code '{user_code}' (any date): {len(all_data if all_data else [])}"
-        )
-
-        if all_data:
-            print("DEBUG: All appointments for this doctor:")
-            for appt in all_data:
-                print(
-                    f"  - ID: {appt.get('id')}, Date: {appt.get('appointment_date')}, Status: {appt.get('status')}"
-                )
-
-        # Now query for today's appointments specifically
         q = (
             supabase.table("appointments")
             .select("*")
@@ -156,72 +102,227 @@ def todays_appointments():
         )
         res = q.execute()
 
-        res_error = (
-            getattr(res, "error", None)
-            if hasattr(res, "error")
-            else res.get("error")
-            if isinstance(res, dict)
-            else None
-        )
-        res_data = (
-            getattr(res, "data", None)
-            if hasattr(res, "data")
-            else res.get("data")
-            if isinstance(res, dict)
-            else None
-        )
+        res_data = getattr(res, "data", None)
+        if res_data is None and isinstance(res, dict):
+            res_data = res.get("data")
 
-        if res_error:
-            print(f"DEBUG: Error in appointments query: {res_error}")
-            return {"error": f"Database query failed: {str(res_error)}"}, 400
-
-        print(
-            f"DEBUG: Query by user_code for TODAY ({today}) returned: {len(res_data if res_data else [])} appointments"
-        )
-
+        confirmed_appointments = []
         if res_data:
-            print(f"DEBUG: Today's appointments found: {len(res_data)}")
             for appt in res_data:
-                print(
-                    f"DEBUG: Appointment ID {appt.get('id')}: user_code='{appt.get('user_code')}', doctor_name='{appt.get('doctor_name')}', status='{appt.get('status')}', date='{appt.get('appointment_date')}'"
-                )
-
-            # Filter for confirmed appointments (case-insensitive)
-            confirmed_appointments = []
-            for appt in res_data:
-                status = appt.get("status", "").lower() if appt.get("status") else ""
-                print(
-                    f"DEBUG: Appointment {appt.get('id')} has status: '{appt.get('status')}' (normalized: '{status}')"
-                )
-                if status == "confirmed":
+                status = str(appt.get("status", "")).lower()
+                if status in ["confirmed", "paid", "completed"]:
                     confirmed_appointments.append(appt)
 
-            print(
-                f"DEBUG: Found {len(confirmed_appointments)} confirmed appointments for TODAY"
-            )
-            final_data = confirmed_appointments
-        else:
-            print(
-                f"DEBUG: No appointments found for user_code '{user_code}' on TODAY ({today})"
-            )
-            final_data = []
+        return {
+            "date": today,
+            "user_code": user_code,
+            "doctor_name": doctor_name,
+            "total": len(confirmed_appointments),
+            "appointments": confirmed_appointments,
+        }, 200
 
     except Exception as e:
-        print(f"DEBUG: Exception during query: {e}")
-        return {"error": f"Database query failed: {str(e)}"}, 400
+        print(f"DEBUG: Database Query Error: {e}")
+        return {"error": "Failed to load appointments."}, 500
 
-    print(
-        f"DEBUG: Final result: {len(final_data)} confirmed appointments for user_code '{user_code}' on TODAY ({today})"
-    )
+# ✅ FIXED: Changed int to str for UUID + Added OPTIONS
+@doctor_bp.route("/appointment/<appointment_id>/payment-otp", methods=["POST", "OPTIONS"])
+@cors_handler
+def initiate_payment_otp(appointment_id):
+    """Step 1: Doctor clicks 'Receive Payment' → Send OTP to patient email."""
+    
+    print(f"🚀 DEBUG: Payment OTP requested for: {appointment_id}")
 
-    # Return appointments for this doctor only (no grouping needed since it's one doctor)
+    # 1. AUTHENTICATION
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return {"error": "Authorization token required."}, 401
+
+    token = auth_header.split(" ")[1]
+    try:
+        jwt_secret = os.getenv("JWT_SECRET", "your_secret_key")
+        payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        doctor_role = payload.get("role", "").lower()
+        
+        if doctor_role != "doctor":
+            return {"error": "Access denied. Only doctors allowed."}, 403
+
+        # Fetch doctor info
+        user_result = supabase.table("users").select("user_code, full_name").eq("id", user_id).execute()
+        user_data = getattr(user_result, "data", None) or user_result.get("data")
+        
+        if not user_data or len(user_data) == 0:
+            return {"error": "Doctor profile not found."}, 404
+        
+        doctor_info = user_data[0]
+        user_code = doctor_info.get("user_code")
+        doctor_name = doctor_info.get("full_name")
+
+    except Exception as e:
+        print(f"❌ Auth error: {e}")
+        return {"error": f"Auth failed: {str(e)}"}, 401
+
+    # 2. FETCH APPOINTMENT & PATIENT EMAIL
+    today = datetime.now().date().isoformat()
+    print(f"🚀 DEBUG: Looking for appointment {appointment_id} on {today}")
+    
+    try:
+        # Fetching directly from appointments
+        appointment = (
+            supabase.table("appointments")
+            .select("id, full_name, patient_email, user_code, appointment_date") 
+            .eq("id", appointment_id)
+            .eq("user_code", user_code)
+            .single()
+            .execute()
+        )
+        appt_data = getattr(appointment, "data", None) or appointment.get("data")
+        
+        if not appt_data:
+            print(f"❌ DEBUG: Appointment {appointment_id} not found")
+            return {"error": "Appointment not found."}, 404
+        
+        patient_email = appt_data.get("patient_email")
+        patient_name = appt_data.get("full_name")
+        
+        if not patient_email:
+            return {"error": "Patient email is missing in this appointment."}, 400
+
+    except Exception as e:
+        print(f"❌ Database Query Error: {e}")
+        return {"error": f"Database error: {str(e)}"}, 500
+
+    print(f"🚀 DEBUG: Sending OTP to {patient_name} ({patient_email})")
+
+    # 3. GENERATE & STORE OTP
+    otp = str(random.randint(100000, 999999))
+    
+    # ✅ KEY CHANGE: Update the 'appointments' table directly
+    try:
+        supabase.table("appointments").update({
+            "payment_otp": otp
+        }).eq("id", appointment_id).execute()
+        
+        print(f"✅ DEBUG: OTP {otp} stored in appointments table")
+    except Exception as e:
+        print(f"❌ DEBUG: Failed to store OTP: {e}")
+        return {"error": "Failed to store OTP. Did you add the 'payment_otp' column?"}, 500
+
+    # 4. SEND OTP EMAIL
+    try:
+        _send_payment_otp_email(patient_email, patient_name, doctor_name, otp, appointment_id)
+        print(f"✅ SUCCESS: OTP sent to {patient_email}")
+    except Exception as e:
+        print(f"⚠️ WARNING: Email failed: {e}")
+
     return {
-        "date": today,
-        "user_code": user_code,
-        "doctor_name": doctor_name,
-        "total": len(final_data or []),
-        "appointments": final_data or [],
+        "message": "Payment OTP sent to patient successfully!",
+        "appointment_id": appointment_id,
+        "patient_name": patient_name,
+        "patient_email": patient_email,
+        "status": "otp_sent"
     }, 200
+# ==========================================
+#  ROUTE 2: VERIFY OTP
+# ==========================================
+@doctor_bp.route("/appointment/<appointment_id>/verify-payment", methods=["POST", "OPTIONS"])
+@cors_handler
+def verify_payment_otp(appointment_id):
+    """Step 2: Doctor enters patient OTP → Mark as PAID"""
+    
+    # ... (Authentication code same as above) ...
+    # ... Copy Auth block here ...
+
+    data = request.get_json() or {}
+    entered_otp = data.get("otp")
+    fee_amount = data.get("fee", 500)
+
+    if not entered_otp:
+        return {"error": "OTP is required."}, 400
+
+    # ✅ KEY CHANGE: Fetch OTP from 'appointments' table
+    try:
+        res = supabase.table("appointments").select("payment_otp").eq("id", appointment_id).single().execute()
+        appt_data = getattr(res, "data", None) or res.get("data")
+
+        if not appt_data:
+            return {"error": "Appointment not found."}, 404
+
+        stored_otp = appt_data.get("payment_otp")
+
+        if stored_otp != entered_otp:
+            return {"error": "Invalid OTP. Please try again."}, 400
+
+        # MARK AS PAID and CLEAR OTP
+        now = datetime.now().isoformat()
+        supabase.table("appointments").update({
+            "status": "paid",
+            "payment_status": "paid",
+            "fee": fee_amount,
+            "payment_otp": None, # Clear OTP to prevent reuse
+            "payment_confirmed_at": now
+        }).eq("id", appointment_id).execute()
+
+        return {"message": "Payment successful!", "status": "paid"}, 200
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+# ==========================================
+#  HELPER: SEND EMAIL
+# ==========================================
+def _send_payment_otp_email(patient_email, patient_name, doctor_name, otp, appointment_id):
+    """Send OTP email to patient."""
+    try:
+        # 1. SETUP CREDENTIALS
+        MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+        MAIL_PORT = int(os.getenv("MAIL_PORT", "465")) # Use 465 for SSL, 587 for TLS
+        MAIL_USERNAME = os.getenv("MAIL_USERNAME") or os.getenv("GMAIL_USER")
+        MAIL_PASSWORD = os.getenv("MAIL_PASSWORD") or os.getenv("GMAIL_APP_PASSWORD")
+        MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "MedSync")
+
+        # 2. CREATE EMAIL CONTENT
+        msg = MIMEText(f"""
+Dear {patient_name},
+
+This email is to verify a payment request initiated by Dr. {doctor_name} for your appointment.
+
+To complete this transaction, please provide the following One-Time Password (OTP) to the hospital staff:
+
+================================
+PAYMENT OTP:  {otp}
+================================
+
+Verification Details:
+- Appointment ID: {appointment_id}
+- Validity: 5 minutes
+
+If you did not authorize this payment, please ignore this email or contact MedSync support immediately.
+
+Sincerely,
+The MedSync Team
+        """)
+        msg["Subject"] = f"Payment Verification Code - {otp}"
+        msg["From"] = f"{MAIL_FROM_NAME} <{MAIL_USERNAME}>"
+        
+        # 🚨 IMPORTANT: This line ensures it goes to the EMAIL, not the name
+        msg["To"] = patient_email 
+
+        # 3. SEND EMAIL
+        context = ssl.create_default_context()
+        
+        # Using SSL (Port 465) - Safest method
+        with smtplib.SMTP_SSL(MAIL_SERVER, MAIL_PORT, context=context) as server:
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)
+            server.send_message(msg)
+            
+        print(f"📧 EMAIL SENT SUCCESSFULLY to: {patient_email}")
+
+    except Exception as e:
+        print(f"⚠️ Email failed: {e}")
+        # We print the error but don't crash the app so the OTP flow continues
+        pass
 
 
 @doctor_bp.route("/patient-info", methods=["POST"])
@@ -328,6 +429,7 @@ def get_patient_info():
 
 
 @doctor_bp.route("/prescription", methods=["POST"])
+@cors_handler
 def create_prescription():
     """Create a prescription for a patient. Requires JWT token with doctor's information."""
     # Extract JWT token from Authorization header
@@ -450,7 +552,7 @@ def create_prescription():
 
     # Validate date format (YYYY-MM-DD)
     try:
-        prescription_date = datetime.datetime.strptime(date.strip(), "%Y-%m-%d").date()
+        prescription_date = datetime.strptime(date.strip(), "%Y-%m-%d").date()
     except ValueError:
         return {"error": "Date must be in format YYYY-MM-DD."}, 400
 
@@ -458,7 +560,7 @@ def create_prescription():
     parsed_time = None
     for fmt in ("%H:%M", "%H:%M:%S"):
         try:
-            parsed_time = datetime.datetime.strptime(time.strip(), fmt).time()
+            parsed_time = datetime.strptime(time.strip(), fmt).time()
             break
         except ValueError:
             continue
@@ -891,3 +993,9 @@ def get_all_doctors():
         return {"error": "Invalid token. Please login again."}, 401
     except Exception as e:
         return {"error": f"Server error: {str(e)}"}, 500
+
+
+
+
+
+

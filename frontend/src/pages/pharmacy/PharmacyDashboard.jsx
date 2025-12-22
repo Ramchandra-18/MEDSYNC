@@ -88,6 +88,26 @@ const PharmacyDashboard = () => {
   const navigate = useNavigate();
   const [animateIn, setAnimateIn] = useState(false);
 
+  // toast state
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+  });
+
+  const showComingSoon = () => {
+    setToast({
+      visible: true,
+      message: "This feature is coming soon!!!!!.",
+    });
+
+    setTimeout(() => {
+      setToast({
+        visible: false,
+        message: "",
+      });
+    }, 2500);
+  };
+
   const user =
     JSON.parse(localStorage.getItem("currentUser")) ||
     JSON.parse(localStorage.getItem("user") || "null");
@@ -212,6 +232,7 @@ const PharmacyDashboard = () => {
               <button
                 key={card.label}
                 type="button"
+                onClick={showComingSoon}
                 className={`group text-left rounded-2xl bg-gradient-to-br ${card.bg} border border-slate-100/80 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/70`}
                 style={{ transitionDelay: `${180 + idx * 60}ms` }}
               >
@@ -240,6 +261,15 @@ const PharmacyDashboard = () => {
           </section>
         </div>
       </main>
+
+      {/* Toast - top-right glassmorph */}
+      {toast.visible && (
+        <div className="fixed top-20 right-5 z-50">
+          <div className="rounded-2xl bg-green-100 text-slate-900 px-4 py-2 text-sm">
+            {toast.message}
+          </div>
+        </div>
+      )}
 
       <PharmacyFooter />
     </div>
